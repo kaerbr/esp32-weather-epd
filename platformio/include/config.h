@@ -35,6 +35,7 @@
 //   day (no more than)" to 1,000. This ensures you will never overrun the free
 //   calls.
 #define USE_PROVIDER_OPENWEATHERMAP
+// #define USE_PROVIDER_BRIGHTSKY
 // #define USE_PROVIDER_DWD // Example for a future provider
 
 // E-PAPER PANEL

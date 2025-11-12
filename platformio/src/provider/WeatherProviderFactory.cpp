@@ -21,6 +21,7 @@
 
 // Include headers for all available concrete providers here
 #include "provider/OpenWeatherMapProvider.h"
+#include "provider/BrightSkyProvider.h"
 // #include "DwdWeatherProvider.h" // Example for a future provider
 
 WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient& client) {
@@ -30,6 +31,9 @@ WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient& client) {
 #if defined(USE_PROVIDER_OPENWEATHERMAP)
     // OpenWeatherMap provider is configured
     return new OpenWeatherMapProvider(client);
+#elif defined(USE_PROVIDER_BRIGHTSKY)
+    // Bright Sky provider is configured
+    return new BrightSkyProvider(client);
 #elif defined(USE_PROVIDER_DWD)
     // DWD provider is configured
     return new DwdWeatherProvider(client);

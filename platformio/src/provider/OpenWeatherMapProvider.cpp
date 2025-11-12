@@ -14,6 +14,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+#ifdef USE_PROVIDER_OPENWEATHERMAP
+
 #include "provider/OpenWeatherMapProvider.h"
 #include "_locale.h"
 #include "config.h"
@@ -476,3 +479,5 @@ void OpenWeatherMapProvider::convertUnits(WeatherData &data)
     }
 #endif
 }
+
+#endif
