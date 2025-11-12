@@ -21,6 +21,22 @@
 #include <cstdint>
 #include <Arduino.h>
 
+// --- WEATHER API PROVIDER ---
+// Uncomment exactly one of the following providers to use.
+// Please note, that One Call API 3.0 is included in the "One Call by Call"
+// subscription only. This separate subscription includes 1,000 calls/day for
+// free and allows you to pay only for the number of API calls made to this
+// product.
+//
+// Here’s how to subscribe and avoid any credit card changes:
+// - Go to https://home.openweathermap.org/subscriptions/billing_info/onecall_30/base?key=base&service=onecall_30
+// - Follow the instructions to complete the subscription.
+// - Go to https://home.openweathermap.org/subscriptions and set the "Calls per
+//   day (no more than)" to 1,000. This ensures you will never overrun the free
+//   calls.
+#define USE_PROVIDER_OPENWEATHERMAP
+// #define USE_PROVIDER_DWD // Example for a future provider
+
 // E-PAPER PANEL
 // This project supports the following E-Paper panels:
 //   DISP_BW_V2 - 7.5in e-Paper (v2)      800x480px  Black/White
@@ -291,9 +307,7 @@ extern const char *WIFI_SSID;
 extern const char *WIFI_PASSWORD;
 extern const unsigned long WIFI_TIMEOUT;
 extern const unsigned HTTP_CLIENT_TCP_TIMEOUT;
-extern const String OWM_APIKEY;
-extern const String OWM_ENDPOINT;
-extern const String OWM_ONECALL_VERSION;
+extern const String APIKEY;
 extern const String LAT;
 extern const String LON;
 extern const String CITY_STRING;
