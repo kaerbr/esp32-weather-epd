@@ -38,8 +38,8 @@ extern const char *LC_ERA_D_FMT;
 extern const char *LC_ERA_D_T_FMT;
 extern const char *LC_ERA_T_FMT;
 
-// OWM LANGUAGE
-extern const String OWM_LANG;
+// LANGUAGE
+extern const String LANGUAGE;
 
 // CURRENT CONDITIONS
 extern const char *TXT_FEELS_LIKE;

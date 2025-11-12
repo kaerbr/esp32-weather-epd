@@ -20,12 +20,15 @@
 #include <Arduino.h>
 #include <driver/adc.h>
 #include <esp_adc_cal.h>
+#include <HTTPClient.h>   // For HTTPC_ERROR_* constants
+#include <ArduinoJson.h>  // For DeserializationError
+#include <WiFi.h>         // For WL_* constants and wl_status_t
 
 #include <aqi.h>
 
 #include "_locale.h"
 #include "_strftime.h"
-#include "api_response.h"
+#include "model/WeatherData.h"
 #include "config.h"
 #include "display_utils.h"
 
@@ -285,7 +288,7 @@ int eventUrgency(const String &event)
  * Truncate Extraneous Info (anything that follows a comma, period, or open
  *   parentheses)
  */
-void filterAlerts(std::vector<owm_alerts_t> &resp, int *ignore_list)
+void filterAlerts(std::vector<WeatherAlert> &resp, int *ignore_list)
 {
   // Convert all event text and tags to lowercase.
   for (auto &alert : resp)
@@ -624,8 +627,8 @@ const uint8_t *getConditionsBitmap(int id, bool day, bool moon, bool cloudy,
  *
  * The daily weather forcast of today is needed for moonrise and moonset times.
  */
-const uint8_t *getHourlyForecastBitmap32(const owm_hourly_t &hourly,
-                                         const owm_daily_t  &today)
+const uint8_t *getHourlyForecastBitmap32(const HourlyWeather &hourly,
+                                         const DailyWeather  &today)
 {
   const int id = hourly.weather.id;
   const bool day = isDay(hourly.weather.icon);
@@ -639,7 +642,7 @@ const uint8_t *getHourlyForecastBitmap32(const owm_hourly_t &hourly,
 /* Takes the daily weather forecast (from OpenWeatherMap API response) and
  * returns a pointer to the icon's 64x64 bitmap.
  */
-const uint8_t *getDailyForecastBitmap64(const owm_daily_t &daily)
+const uint8_t *getDailyForecastBitmap64(const DailyWeather &daily)
 {
   const int id = daily.weather.id;
   // always show daytime icon for daily forecast
@@ -656,8 +659,8 @@ const uint8_t *getDailyForecastBitmap64(const owm_daily_t &daily)
  * 
  * The daily weather forcast of today is needed for moonrise and moonset times.
  */
-const uint8_t *getCurrentConditionsBitmap196(const owm_current_t &current,
-                                             const owm_daily_t   &today)
+const uint8_t *getCurrentConditionsBitmap196(const CurrentWeather &current,
+                                             const DailyWeather   &today)
 {
   const int id = current.weather.id;
   const bool day = isDay(current.weather.icon);
@@ -676,7 +679,7 @@ const uint8_t *getCurrentConditionsBitmap196(const owm_current_t &current,
  * If a relevant category can not be determined, the default alert bitmap will
  * be returned. (warning triangle icon)
  */
-const uint8_t *getAlertBitmap32(const owm_alerts_t &alert)
+const uint8_t *getAlertBitmap32(const WeatherAlert &alert)
 {
   enum alert_category c = getAlertCategory(alert);
   switch (c)
@@ -722,7 +725,7 @@ const uint8_t *getAlertBitmap32(const owm_alerts_t &alert)
  * If a relevant category can not be determined, the default alert bitmap will
  * be returned. (warning triangle icon)
  */
-const uint8_t *getAlertBitmap48(const owm_alerts_t &alert)
+const uint8_t *getAlertBitmap48(const WeatherAlert &alert)
 {
   enum alert_category c = getAlertCategory(alert);
   switch (c)
@@ -782,7 +785,7 @@ bool containsTerminology(const String s, const std::vector<String> &terminology)
  *
  * Weather alert terminology is defined in the included locale header.
  */
-enum alert_category getAlertCategory(const owm_alerts_t &alert)
+enum alert_category getAlertCategory(const WeatherAlert &alert)
 {
   if (containsTerminology(alert.event, TERM_SMOG))
   {

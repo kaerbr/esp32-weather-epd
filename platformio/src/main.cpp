@@ -24,12 +24,14 @@
 #include <Wire.h>
 
 #include "_locale.h"
-#include "api_response.h"
 #include "client_utils.h"
 #include "config.h"
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
 #include "renderer.h"
+#include "model/WeatherData.h"
+#include "provider/WeatherProvider.h"
+#include "provider/WeatherProviderFactory.h"
 
 #if defined(SENSOR_BME280)
   #include <Adafruit_BME280.h>
@@ -45,8 +47,8 @@
 #endif
 
 // too large to allocate locally on stack
-static owm_resp_onecall_t       owm_onecall;
-static owm_resp_air_pollution_t owm_air_pollution;
+static WeatherData weatherData;
+static WeatherProvider *weatherProvider = nullptr;
 
 Preferences prefs;
 
@@ -249,7 +251,6 @@ void setup()
     beginDeepSleep(startTime, &timeInfo);
   }
 
-  // MAKE API REQUESTS
 #ifdef USE_HTTP
   WiFiClient client;
 #elif defined(USE_HTTPS_NO_CERT_VERIF)
@@ -259,26 +260,27 @@ void setup()
   WiFiClientSecure client;
   client.setCACert(cert_Sectigo_RSA_Organization_Validation_Secure_Server_CA);
 #endif
-  int rxStatus = getOWMonecall(client, owm_onecall);
-  if (rxStatus != HTTP_CODE_OK)
-  {
-    killWiFi();
-    statusStr = "One Call " + OWM_ONECALL_VERSION + " API";
-    tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
-    initDisplay();
-    do
-    {
-      drawError(wi_cloud_down_196x196, statusStr, tmpStr);
-    } while (display.nextPage());
-    powerOffDisplay();
-    beginDeepSleep(startTime, &timeInfo);
+
+  // INITIALIZE WEATHER PROVIDER
+  weatherProvider = WeatherProviderFactory::createProvider(client);
+
+  // MAKE API REQUESTS
+  bool data_ok = false;
+  if (weatherProvider) {
+    data_ok = weatherProvider->fetchWeatherData(weatherData);
   }
-  rxStatus = getOWMairpollution(client, owm_air_pollution);
-  if (rxStatus != HTTP_CODE_OK)
+  
+  if (!weatherProvider || !data_ok)
   {
     killWiFi();
-    statusStr = "Air Pollution API";
-    tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
+    if (!weatherProvider) {
+      statusStr = "No API Provider";
+      tmpStr = "Please configure an API key.";
+    } else {
+      int rxStatus = weatherProvider->lastHttpResponseCode;
+      statusStr = String(rxStatus, DEC);
+      tmpStr = getHttpResponsePhrase(rxStatus);
+    }
     initDisplay();
     do
     {
@@ -343,13 +345,13 @@ void setup()
   initDisplay();
   do
   {
-    drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
-                          owm_air_pollution, inTemp, inHumidity);
-    drawOutlookGraph(owm_onecall.hourly, owm_onecall.daily, timeInfo);
-    drawForecast(owm_onecall.daily, timeInfo);
+    drawCurrentConditions(weatherData.current, weatherData.daily[0],
+                          weatherData.air_quality, inTemp, inHumidity);
+    drawOutlookGraph(weatherData.hourly, weatherData.daily, timeInfo);
+    drawForecast(weatherData.daily, timeInfo);
     drawLocationDate(CITY_STRING, dateStr);
 #if DISPLAY_ALERTS
-    drawAlerts(owm_onecall.alerts, CITY_STRING, dateStr);
+    drawAlerts(weatherData.alerts, CITY_STRING, dateStr);
 #endif
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());

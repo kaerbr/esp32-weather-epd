@@ -70,11 +70,9 @@ const char *LC_ERA_D_T_FMT = "";
 // ERA_T_FMT               era time format string
 const char *LC_ERA_T_FMT   = "";
 
-// OWM LANGUAGE
-// For full list of languages, see
-// https://openweathermap.org/api/one-call-api#multi
-// Note: "[only] The contents of the 'description' field will be translated."
-const String OWM_LANG = "nl";
+// LANGUAGE
+// For example for API requests.
+const String LANGUAGE = "nl";
 
 // CURRENT CONDITIONS
 const char *TXT_FEELS_LIKE         = "Voelt als";
@@ -173,7 +171,7 @@ const char *TXT_CRIT_LOW_BATTERY_VOLTAGE = "Critically low battery voltage!";
 // last index is the most urgent keyword. Expected as all lowercase.
 //
 // Note to Translators:
-//   OpenWeatherMap returns alerts in English regardless of the OWM LANGUAGE
+//   OpenWeatherMap returns alerts in English regardless of the LANGUAGE
 //   option or territory. For this reason it is preferred that you do not
 //   translate text related to Alerts. Understandably, it may be undesirable to
 //   see English alerts in territories where English is uncommon. To satisfy
