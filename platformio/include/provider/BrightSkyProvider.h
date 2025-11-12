@@ -1,5 +1,4 @@
-/* Concrete implementation of WeatherProvider for the OpenWeatherMap API.
- * Copyright (C) 2022-2025  Luke Marzen
+/* Concrete implementation of WeatherProvider for the Bright Sky API.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,32 +13,26 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 #include "config.h"
-#ifdef USE_PROVIDER_OPENWEATHERMAP
+#ifdef USE_PROVIDER_BRIGHTSKY
 
 #pragma once
 
 #include "provider/WeatherProvider.h"
-#include "model/WeatherData.h"
-#include <WiFiClient.h>
-#include <cstdint>
-#include <vector>
 #include <ArduinoJson.h>
+#include <WiFiClient.h>
 
-class OpenWeatherMapProvider : public WeatherProvider {
+class BrightSkyProvider : public WeatherProvider {
 public:
-    explicit OpenWeatherMapProvider(WiFiClient& client);
-    ~OpenWeatherMapProvider() override;
+    explicit BrightSkyProvider(WiFiClient& client);
+    ~BrightSkyProvider() override;
 
     bool fetchWeatherData(WeatherData& data) override;
 
 private:
-    int fetchOneCallData(WeatherData& data);
-    int fetchAirPollutionData(WeatherData& data);
+    int fetchForecastData(JsonDocument& doc, const String& date);
+    void deserializeForecast(JsonDocument& doc, WeatherData& data);
     void convertUnits(WeatherData& data);
-    static DeserializationError deserializeOneCall(WiFiClient& json, WeatherData& data);
-    static DeserializationError deserializeAirQuality(WiFiClient& json, WeatherData& data);
 
     WiFiClient& wifi_client;
 };
