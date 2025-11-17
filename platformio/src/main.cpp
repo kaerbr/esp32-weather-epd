@@ -24,6 +24,7 @@
 #include <Wire.h>
 #include <ElegantOTA.h>
 #include <WebServer.h>
+#include <HTTPClient.h>
 
 #include "_locale.h"
 #include "client_utils.h"
@@ -41,10 +42,8 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
-#if defined(USE_HTTPS_WITH_CERT_VERIF) || defined(USE_HTTPS_WITH_CERT_VERIF)
+#if defined(USE_HTTPS_WITH_CERT_VERIF)
   #include <WiFiClientSecure.h>
-#endif
-#ifdef USE_HTTPS_WITH_CERT_VERIF
   #include "cert.h"
 #endif
 
@@ -302,22 +301,12 @@ void setup()
   weatherProvider = WeatherProviderFactory::createProvider(client);
 
   // MAKE API REQUESTS
-  bool data_ok = false;
-  if (weatherProvider) {
-    data_ok = weatherProvider->fetchWeatherData(weatherData);
-  }
-  
-  if (!weatherProvider || !data_ok)
+  int rxStatus = weatherProvider->fetchWeatherData(weatherData);
+  if (rxStatus != HTTP_CODE_OK)
   {
     killWiFi();
-    if (!weatherProvider) {
-      statusStr = "No API Provider";
-      tmpStr = "Please configure an API key.";
-    } else {
-      int rxStatus = weatherProvider->lastHttpResponseCode;
-      statusStr = String(rxStatus, DEC);
-      tmpStr = getHttpResponsePhrase(rxStatus);
-    }
+    statusStr = weatherProvider->providerName + " API";
+    tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
     initDisplay();
     do
     {
@@ -390,7 +379,7 @@ void setup()
 #if DISPLAY_ALERTS
     drawAlerts(weatherData.alerts, CITY_STRING, dateStr);
 #endif
-    drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
+    drawStatusBar(weatherProvider->providerName, statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
   } while (display.nextPage());
   powerOffDisplay();
 

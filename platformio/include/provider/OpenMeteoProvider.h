@@ -1,5 +1,4 @@
-/* Factory for creating weather provider instances.
- * Copyright (C) 2022-2025  Luke Marzen
+/* Concrete implementation of WeatherProvider for the Open-Meteo API.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +14,24 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "provider/WeatherProviderFactory.h"
+#ifdef USE_PROVIDER_OPENMETEO
+
+#pragma once
+
+#include <WiFiClient.h>
+
 #include "provider/WeatherProvider.h"
-#include "config.h"
+#include "model/WeatherData.h"
 
-// Include headers for all available concrete providers here
-#include "provider/OpenWeatherMapProvider.h"
-#include "provider/OpenMeteoProvider.h"
+class OpenMeteoProvider : public WeatherProvider {
+public:
+    explicit OpenMeteoProvider(WiFiClient& client);
+    ~OpenMeteoProvider() override;
 
-#if defined(USE_PROVIDER_OPENWEATHERMAP)
-    // OpenWeatherMap provider is configured
-    return new OpenWeatherMapProvider(client);
-    // DWD provider is configured
-    return new DwdWeatherProvider(client);
+    bool fetchWeatherData(WeatherData& data) override;
+
+private:
+    WiFiClient& wifi_client;
+};
+
 #endif
-}

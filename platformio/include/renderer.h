@@ -66,5 +66,5 @@ void drawForecast(const DailyWeather *daily, tm timeInfo);
 void drawAlerts(std::vector<WeatherAlert> &alerts, const String &city, const String &date);
 void drawLocationDate(const String &city, const String &date);
 void drawOutlookGraph(const HourlyWeather *hourly, const DailyWeather *daily, tm timeInfo);
-void drawStatusBar(const String &statusStr, const String &refreshTimeStr, int rssi, uint32_t batVoltage);
+void drawStatusBar(const String &providerNameStr, const String &statusStr, const String &refreshTimeStr, int rssi, uint32_t batVoltage);
 void drawError(const uint8_t *bitmap_196x196, const String &errMsgLn1, const String &errMsgLn2="");
