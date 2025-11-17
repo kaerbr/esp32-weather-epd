@@ -32,7 +32,7 @@ public:
     explicit OpenWeatherMapProvider(WiFiClient& client);
     ~OpenWeatherMapProvider() override;
 
-    bool fetchWeatherData(WeatherData& data) override;
+    int fetchWeatherData(WeatherData& data) override;
 
 private:
     int fetchOneCallData(WeatherData& data);

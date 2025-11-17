@@ -23,6 +23,9 @@
 #include "conversions.h"
 #include "display_utils.h" // For getHttpResponsePhrase
 #include "aqi.h"
+
+#include <HTTPClient.h>
+
 static const int AIR_POLLUTION_HISTORY_HOURS = 24;
 static const String API_ENDPOINT = "api.openweathermap.org";
 
@@ -36,27 +39,25 @@ OpenWeatherMapProvider::~OpenWeatherMapProvider()
     // The client is owned by the caller, so the destructor is empty.
 }
 
-bool OpenWeatherMapProvider::fetchWeatherData(WeatherData &data)
+int OpenWeatherMapProvider::fetchWeatherData(WeatherData &data)
 {
     int onecall_http_code = fetchOneCallData(data);
     if (onecall_http_code != HTTP_CODE_OK)
     {
         Serial.println("Failed to get OneCall data.");
-        lastHttpResponseCode = onecall_http_code;
-        return false;
+        return onecall_http_code;
     }
 
     int air_http_code = fetchAirPollutionData(data);
     if (air_http_code != HTTP_CODE_OK)
     {
         Serial.println("Failed to get Air Pollution data.");
-        lastHttpResponseCode = air_http_code;
-        return false;
+        return air_http_code;
     }
 
     convertUnits(data);
 
-    return true;
+    return HTTP_CODE_OK;
 }
 
 int OpenWeatherMapProvider::fetchOneCallData(WeatherData &data)
