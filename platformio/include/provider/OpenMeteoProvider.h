@@ -28,7 +28,7 @@ public:
     explicit OpenMeteoProvider(WiFiClient& client);
     ~OpenMeteoProvider() override;
 
-    bool fetchWeatherData(WeatherData& data) override;
+    int fetchWeatherData(WeatherData& data) override;
 
 private:
     WiFiClient& wifi_client;

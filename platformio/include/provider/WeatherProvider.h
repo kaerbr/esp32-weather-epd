@@ -12,9 +12,9 @@ class WeatherProvider
 {
 public:
     /**
-     * @brief Default constructor. Initializes response code to 0.
+     * @brief Default constructor.
      */
-    WeatherProvider() : lastHttpResponseCode(0), providerName("") {}
+    WeatherProvider() : providerName("") {}
 
     /**
      * @brief Virtual destructor.
@@ -31,14 +31,9 @@ public:
      * generic WeatherData model.
      *
      * @param data A reference to a WeatherData struct to be filled with the fetched data.
-     * @return true if the data was fetched and parsed successfully, false otherwise.
+     * @return the http status code of the last successful or first failing http request
      */
-    virtual bool fetchWeatherData(WeatherData &data) = 0;
-
-    /**
-     * @brief Stores the HTTP response code from the last API request.
-     */
-    int lastHttpResponseCode;
+    virtual int fetchWeatherData(WeatherData &data) = 0;
 
     /**
      * @brief The user-friendly name of the weather provider.

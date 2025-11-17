@@ -23,10 +23,12 @@
 #include "provider/OpenWeatherMapProvider.h"
 #include "provider/OpenMeteoProvider.h"
 
+WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient &wifiClient) {
 #if defined(USE_PROVIDER_OPENWEATHERMAP)
     // OpenWeatherMap provider is configured
-    return new OpenWeatherMapProvider(client);
+    return new OpenWeatherMapProvider(wifiClient);
+#elif defined(USE_PROVIDER_OPENMETEO)
     // DWD provider is configured
-    return new DwdWeatherProvider(client);
+    return new OpenMeteoProvider(wifiClient);
 #endif
 }

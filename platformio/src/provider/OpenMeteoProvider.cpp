@@ -31,7 +31,7 @@ OpenMeteoProvider::~OpenMeteoProvider()
     // The client is owned by the caller, so the destructor is empty.
 }
 
-bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
+int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
 {
     HTTPClient http;
     String server = "api.open-meteo.com";
@@ -76,7 +76,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     if (!http.begin(wifi_client, server, 443, url, true))
     {
         log_e("HTTP connection failed");
-        return false;
+        return 400;
     }
 
     int httpCode = http.GET();
@@ -84,7 +84,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     {
         log_e("HTTP GET failed, code: %d", httpCode);
         http.end();
-        return false;
+        return httpCode;
     }
 
     String payload = http.getString();
@@ -95,21 +95,21 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     if (error)
     {
         log_e("deserializeJson() failed: %s", error.c_str());
-        return false;
+        return 400;
     }
 
     JsonObject current = doc["current"];
     if (current.isNull())
     {
         log_e("JSON parsing error: 'current' object not found");
-        return false;
+        return 400;
     }
 
     JsonObject daily = doc["daily"];
     if (daily.isNull())
     {
         log_e("JSON parsing error: 'daily' object not found");
-        return false;
+        return 400;
     }
 
     // Fill data.current with real data from the API
@@ -141,7 +141,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     if (daily_time.size() < MAX_DAILY_FORECASTS)
     {
         log_e("JSON parsing error: 'daily' object does not contain enough forecast days");
-        return false;
+        return 400;
     }
 
     for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
@@ -167,7 +167,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     if (hourly.isNull())
     {
         log_e("JSON parsing error: 'hourly' object not found");
-        return false;
+        return 400;
     }
 
     JsonArray hourly_time = hourly["time"];
@@ -195,7 +195,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     if (hourly_time.size() < startIndex + MAX_HOURLY_FORECASTS)
     {
         log_e("JSON parsing error: 'hourly' object does not contain enough forecast hours from the current time");
-        return false;
+        return 400;
     }
 
     // Fill data.hourly with real data from the API, starting from the current hour's slot
@@ -344,7 +344,7 @@ bool OpenMeteoProvider::fetchWeatherData(WeatherData &data)
 
 
 
-    return true;
+    return 200;
 }
 
 #endif
