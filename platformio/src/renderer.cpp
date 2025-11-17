@@ -1168,7 +1168,7 @@ void drawOutlookGraph(const HourlyWeather *hourly, const DailyWeather *daily,
 /* This function is responsible for drawing the status bar along the bottom of
  * the display.
  */
-void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
+void drawStatusBar(const String &providerNameStr, const String &statusStr, const String &refreshTimeStr,
                    int rssi, uint32_t batVoltage)
 {
   String dataStr;
@@ -1233,6 +1233,12 @@ void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
   display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 21, wi_refresh_32x32,
                              32, 32, dataColor);
   pos -= sp;
+
+  // provider name
+  dataColor = GxEPD_BLACK;
+  drawString(pos, DISP_HEIGHT - 1 - 2, providerNameStr, RIGHT, dataColor);
+  pos -= getStringWidth(providerNameStr);
+  pos -= sp + 8; // some spacing
 
   // status
   dataColor = ACCENT_COLOR;

@@ -23,21 +23,12 @@
 #include "conversions.h"
 #include "display_utils.h" // For getHttpResponsePhrase
 #include "aqi.h"
-#include <HTTPClient.h>
-#include <time.h>
-
-#ifdef USE_HTTP
-static const uint16_t PORT = 80;
-#else
-static const uint16_t PORT = 443;
-#endif
-
 static const int AIR_POLLUTION_HISTORY_HOURS = 24;
 static const String API_ENDPOINT = "api.openweathermap.org";
 
 OpenWeatherMapProvider::OpenWeatherMapProvider(WiFiClient &client) : wifi_client(client)
 {
-    // The client is now injected, so the constructor is empty.
+    providerName = "OpenWeatherMap";
 }
 
 OpenWeatherMapProvider::~OpenWeatherMapProvider()

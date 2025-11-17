@@ -14,7 +14,7 @@ public:
     /**
      * @brief Default constructor. Initializes response code to 0.
      */
-    WeatherProvider() : lastHttpResponseCode(0) {}
+    WeatherProvider() : lastHttpResponseCode(0), providerName("") {}
 
     /**
      * @brief Virtual destructor.
@@ -39,4 +39,15 @@ public:
      * @brief Stores the HTTP response code from the last API request.
      */
     int lastHttpResponseCode;
+
+    /**
+     * @brief The user-friendly name of the weather provider.
+     */
+    String providerName;
+
+#ifdef USE_HTTP
+    static const uint16_t PORT = 80;
+#else
+    static const uint16_t PORT = 443;
+#endif
 };
