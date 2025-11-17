@@ -31,14 +31,7 @@ WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient& client) {
 #if defined(USE_PROVIDER_OPENWEATHERMAP)
     // OpenWeatherMap provider is configured
     return new OpenWeatherMapProvider(client);
-#elif defined(USE_PROVIDER_BRIGHTSKY)
-    // Bright Sky provider is configured
-    return new BrightSkyProvider(client);
-#elif defined(USE_PROVIDER_DWD)
     // DWD provider is configured
     return new DwdWeatherProvider(client);
 #endif
-
-    // If no provider is configured, return nullptr.
-    return nullptr;
 }
