@@ -9,8 +9,8 @@
 #include <Arduino.h>
 
 // Constants defining the size of forecast arrays, mirroring the original API response capabilities.
-#define MAX_HOURLY_FORECASTS 48
-#define MAX_DAILY_FORECASTS 8
+#define MAX_HOURLY_FORECASTS 24
+#define MAX_DAILY_FORECASTS 5
 #define MAX_ALERTS 8
 
 // Represents a generic weather condition.

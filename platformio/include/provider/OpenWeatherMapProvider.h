@@ -1,5 +1,4 @@
 /* Concrete implementation of WeatherProvider for the OpenWeatherMap API.
- * Copyright (C) 2022-2025  Luke Marzen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
