@@ -14,6 +14,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
 #ifdef USE_PROVIDER_OPENMETEO
 
 #pragma once

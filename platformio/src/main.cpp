@@ -46,10 +46,6 @@
   #include "cert.h"
 #endif
 
-// too large to allocate locally on stack
-static WeatherData weatherData;
-static WeatherProvider *weatherProvider = nullptr;
-
 Preferences prefs;
 
 /* Put esp32 into ultra low-power deep sleep (<11μA).
@@ -262,7 +258,9 @@ void setup()
 #endif
 
   // INITIALIZE WEATHER PROVIDER
-  weatherProvider = WeatherProviderFactory::createProvider(client);
+  // too large to allocate locally on stack
+  static WeatherData weatherData;
+  static WeatherProvider *weatherProvider = WeatherProviderFactory::createProvider(client);
 
   // MAKE API REQUESTS
   int rxStatus = weatherProvider->fetchWeatherData(weatherData);
