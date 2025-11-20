@@ -26,7 +26,6 @@
 
 #include <HTTPClient.h>
 
-static const int AIR_POLLUTION_HISTORY_HOURS = 24;
 static const String API_ENDPOINT = "api.openweathermap.org";
 
 OpenWeatherMapProvider::OpenWeatherMapProvider(WiFiClient &client) : wifi_client(client)
@@ -256,8 +255,8 @@ DeserializationError OpenWeatherMapProvider::deserializeOneCall(WiFiClient &json
         data.daily[i].moonset = daily["moonset"].as<int64_t>();
         data.daily[i].moon_phase = daily["moon_phase"].as<float>();
         JsonObject daily_temp = daily["temp"];
-        data.daily[i].temp.min = daily_temp["min"].as<float>();
-        data.daily[i].temp.max = daily_temp["max"].as<float>();
+        data.daily[i].temp_min = daily_temp["min"].as<float>();
+        data.daily[i].temp_max = daily_temp["max"].as<float>();
         data.daily[i].pop = daily["pop"].as<float>();
         data.daily[i].rain = daily["rain"].as<float>();
         data.daily[i].snow = daily["snow"].as<float>();
@@ -321,6 +320,7 @@ DeserializationError OpenWeatherMapProvider::deserializeAirQuality(WiFiClient &j
         i++;
     }
 
+    // OpenWeatherMap does not provide pb (lead) conentrations, so we pass NULL.
     data.air_quality.aqi = calc_aqi(AQI_SCALE, co, nh3, no, no2, o3, NULL, so2, pm10, pm2_5);
 
     return error;
@@ -337,8 +337,8 @@ void OpenWeatherMapProvider::convertUnits(WeatherData &data)
     }
     for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
     {
-        data.daily[i].temp.min = celsius_to_fahrenheit(data.daily[i].temp.min);
-        data.daily[i].temp.max = celsius_to_fahrenheit(data.daily[i].temp.max);
+        data.daily[i].temp_min = celsius_to_fahrenheit(data.daily[i].temp_min);
+        data.daily[i].temp_max = celsius_to_fahrenheit(data.daily[i].temp_max);
     }
 #elif defined(UNITS_TEMP_KELVIN)
     data.current.temp = celsius_to_kelvin(data.current.temp);
@@ -349,8 +349,8 @@ void OpenWeatherMapProvider::convertUnits(WeatherData &data)
     }
     for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
     {
-        data.daily[i].temp.min = celsius_to_kelvin(data.daily[i].temp.min);
-        data.daily[i].temp.max = celsius_to_kelvin(data.daily[i].temp.max);
+        data.daily[i].temp_min = celsius_to_kelvin(data.daily[i].temp_min);
+        data.daily[i].temp_max = celsius_to_kelvin(data.daily[i].temp_max);
     }
 #endif
 

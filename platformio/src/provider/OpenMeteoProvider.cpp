@@ -18,6 +18,8 @@
 #ifdef USE_PROVIDER_OPENMETEO
 
 #include "provider/OpenMeteoProvider.h"
+#include "_locale.h"
+#include "aqi.h"
 #include <ArduinoJson.h>
 #include <HTTPClient.h>
 
@@ -125,8 +127,8 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
       data.daily[i].moonrise = 0; // Default to 0 as no real data from API
       data.daily[i].moonset = 0;   // Default to 0 as no real data from API
       data.daily[i].moon_phase = 0.0f; // Default to 0.0f as no real data from API
-      data.daily[i].temp.min = daily["temperature_2m_min"][i];
-      data.daily[i].temp.max = daily["temperature_2m_max"][i];
+      data.daily[i].temp_min = daily["temperature_2m_min"][i];
+      data.daily[i].temp_max = daily["temperature_2m_max"][i];
       data.daily[i].pop = daily["precipitation_probability_max"][i].as<float>() / 100.0f;
       data.daily[i].rain = daily["rain_sum"][i];
       data.daily[i].snow = daily["snowfall_sum"][i];
@@ -182,7 +184,8 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
         String server = "air-quality-api.open-meteo.com";
         String url = "/v1/air-quality?latitude=" + LAT +
                         "&longitude=" + LON +
-                        "&current=european_aqi" +
+                        "&hourly=carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,pm2_5,pm10,ammonia" +
+                        "&past_days=1" +
                         "&timeformat=unixtime&timezone=auto";
 
         http.begin(wifi_client, server, PORT, url, true);
@@ -195,7 +198,50 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
 
         doc.clear(); // Clear the document before reusing
         deserializeJson(doc, aq_payload);
+
+        JsonObject aq_hourly = doc["hourly"];
+        JsonArray aq_time = aq_hourly["time"];
+
+        // Find the starting index for the air quality data.
+        // Find the last hourly timestamp that is less than or equal to the current time.
+        int aq_startIndex = -1;
+        for (int i = 0; i < aq_time.size(); i++) {
+            if (aq_time[i].as<time_t>() <= data.current.dt) {
+                aq_startIndex = i;
+            } else {
+                // The aq_time array is sorted, so we can stop once we pass the current time.
+                break;
+            }
+        }
+
+        if (aq_startIndex == -1) {
+            // This can happen if the current time is before the first forecast hour.
+            // As a fallback, log a warning and start from the beginning of the forecast.
+            log_w("Could not find a past hourly air quality slot; starting from the first available hour.");
+            aq_startIndex = 0;
+        }
+
+        // We need 24 hours of data for the AQI calculation.
+        // The startIndex points to the current hour, so we need to go back 23 hours to get a total of 24 hours.
+        int start_index = max(0, aq_startIndex - 23);
+
+        float co[AIR_POLLUTION_HISTORY_HOURS] = {0}, nh3[AIR_POLLUTION_HISTORY_HOURS] = {0}, no2[AIR_POLLUTION_HISTORY_HOURS] = {0}, o3[AIR_POLLUTION_HISTORY_HOURS] = {0}, so2[AIR_POLLUTION_HISTORY_HOURS] = {0}, pm10[AIR_POLLUTION_HISTORY_HOURS] = {0}, pm2_5[AIR_POLLUTION_HISTORY_HOURS] = {0};
         
+        for (int i = 0; i < AIR_POLLUTION_HISTORY_HOURS; ++i) {
+            int dataIndex = start_index + i;
+            if(dataIndex < aq_time.size()) {
+                co[i] = aq_hourly["carbon_monoxide"][dataIndex].as<float>();
+                nh3[i] = aq_hourly["ammonia"][dataIndex].as<float>();
+                no2[i] = aq_hourly["nitrogen_dioxide"][dataIndex].as<float>();
+                o3[i] = aq_hourly["ozone"][dataIndex].as<float>();
+                so2[i] = aq_hourly["sulphur_dioxide"][dataIndex].as<float>();
+                pm10[i] = aq_hourly["pm10"][dataIndex].as<float>();
+                pm2_5[i] = aq_hourly["pm2_5"][dataIndex].as<float>();
+            }
+        }
+
+        // Open-Meteo does not provide NO (Nitrogen Monoxide) or PB (Lead), so we pass NULL for those.
+        data.air_quality.aqi = calc_aqi(AQI_SCALE, co, nh3, NULL, no2, o3, NULL, so2, pm10, pm2_5);
     }
 
     // Fill Metadata from API response
