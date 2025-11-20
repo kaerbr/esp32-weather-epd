@@ -650,8 +650,8 @@ void drawForecast(const DailyWeather *daily, tm timeInfo)
     // high | low
     display.setFont(&FONT_8pt8b);
     drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
-    hiStr = String(static_cast<int>(std::round(daily[i].temp.max)));
-    loStr = String(static_cast<int>(std::round(daily[i].temp.min)));
+    hiStr = String(static_cast<int>(std::round(daily[i].temp_max)));
+    loStr = String(static_cast<int>(std::round(daily[i].temp_min)));
 #if defined(UNITS_TEMP_CELSIUS) || defined(UNITS_TEMP_FAHRENHEIT)
     hiStr += "\260";
     loStr += "\260";

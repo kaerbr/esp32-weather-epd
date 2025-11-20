@@ -8,10 +8,11 @@
 #include <vector>
 #include <Arduino.h>
 
-// Constants defining the size of forecast arrays, mirroring the original API response capabilities.
+// Constants defining the size of forecast arrays.
 #define MAX_HOURLY_FORECASTS 24
 #define MAX_DAILY_FORECASTS 5
 #define MAX_ALERTS 8
+#define AIR_POLLUTION_HISTORY_HOURS 24
 
 // Represents a generic weather condition.
 struct WeatherCondition
@@ -55,13 +56,6 @@ struct HourlyWeather
   WeatherCondition weather;
 };
 
-// Represents the temperature forecast for a single day.
-struct DailyTemp
-{
-  float min; // Min daily temperature, in units defined by config.h
-  float max; // Max daily temperature, in units defined by config.h
-};
-
 // Represents a single day in the daily forecast.
 struct DailyWeather
 {
@@ -71,7 +65,8 @@ struct DailyWeather
   int64_t moonrise; // Moonrise time, Unix, UTC
   int64_t moonset;  // Moonset time, Unix, UTC
   float moon_phase; // Moon phase
-  DailyTemp temp;
+  float temp_min;   // Min daily temperature, in units defined by config.h
+  float temp_max;   // Max daily temperature, in units defined by config.h
   float pop;        // Probability of precipitation (0.0 to 1.0)
   float rain;       // Precipitation volume, in units defined by config.h
   float snow;       // Snow volume, in units defined by config.h
@@ -94,9 +89,8 @@ struct WeatherAlert
 struct AirQuality
 {
   int aqi; // Calculated Air Quality Index
-           // To keep it generic, we can store the raw component values if a provider offers them.
-           // This is optional and depends on whether we want to do calculations outside the provider.
-           // For now, a pre-calculated AQI is sufficient for the renderer.
+           // Could be either fetched directly from the provider or calculated
+           // by calc_aqi() from pollutant-concentration-to-aqi library.
 };
 
 // The main container for all weather-related data, passed from a WeatherProvider to the renderer.
