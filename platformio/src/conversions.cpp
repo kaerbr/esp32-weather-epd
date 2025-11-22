@@ -16,6 +16,7 @@
  */
 
 #include "conversions.h"
+#include "config.h" // Include config.h to access unit definitions
 
 #include <cmath>
 
@@ -131,4 +132,105 @@ float millimeters_to_centimeters(float millimeter)
 {
   return millimeter / 10.0f;
 } // end milimeters_to_centimeter
+
+// New conversion functions from metric base units to configured units
+float convertTemperature(float celsius) {
+  #if defined(UNITS_TEMP_FAHRENHEIT)
+    return celsius_to_fahrenheit(celsius);
+  #elif defined(UNITS_TEMP_KELVIN)
+    return celsius_to_kelvin(celsius);
+  #else // UNITS_TEMP_CELSIUS
+    return celsius;
+  #endif
+}
+
+float convertWindSpeed(float metersPerSecond) {
+  #if defined(UNITS_SPEED_KILOMETERSPERHOUR)
+    return meterspersecond_to_kilometersperhour(metersPerSecond);
+  #elif defined(UNITS_SPEED_MILESPERHOUR)
+    return meterspersecond_to_milesperhour(metersPerSecond);
+  #elif defined(UNITS_SPEED_FEETPERSECOND)
+    return meterspersecond_to_feetpersecond(metersPerSecond);
+  #elif defined(UNITS_SPEED_KNOTS)
+    return meterspersecond_to_knots(metersPerSecond);
+  #elif defined(UNITS_SPEED_BEAUFORT)
+    return (float)meterspersecond_to_beaufort(metersPerSecond);
+  #else // UNITS_SPEED_METERSPERSECOND
+    return metersPerSecond;
+  #endif
+}
+
+float convertPressure(float hectopascals) {
+  #if defined(UNITS_PRES_PASCALS)
+    return hectopascals_to_pascals(hectopascals);
+  #elif defined(UNITS_PRES_MILLIMETERSOFMERCURY)
+    return hectopascals_to_millimetersofmercury(hectopascals);
+  #elif defined(UNITS_PRES_INCHESOFMERCURY)
+    return hectopascals_to_inchesofmercury(hectopascals);
+  #elif defined(UNITS_PRES_MILLIBARS)
+    return hectopascals_to_millibars(hectopascals);
+  #elif defined(UNITS_PRES_ATMOSPHERES)
+    return hectopascals_to_atmospheres(hectopascals);
+  #elif defined(UNITS_PRES_GRAMSPERSQUARECENTIMETER)
+    return hectopascals_to_gramspersquarecentimeter(hectopascals);
+  #elif defined(UNITS_PRES_POUNDSPERSQUAREINCH)
+    return hectopascals_to_poundspersquareinch(hectopascals);
+  #else // UNITS_PRES_HECTOPASCALS
+    return hectopascals;
+  #endif
+}
+
+float convertVisibility(float meters) {
+  #if defined(UNITS_DIST_KILOMETERS)
+    return meters_to_kilometers(meters);
+  #elif defined(UNITS_DIST_MILES)
+    return meters_to_miles(meters);
+  #else
+    return meters; // Default to meters if no other distance unit is defined
+  #endif
+}
+
+float convertPrecipitation(float millimeters) {
+  // Prioritize hourly precipitation units, then daily, then default to millimeters
+  #if defined(UNITS_HOURLY_PRECIP_INCHES) || defined(UNITS_DAILY_PRECIP_INCHES)
+    return millimeters_to_inches(millimeters);
+  #elif defined(UNITS_HOURLY_PRECIP_CENTIMETERS) || defined(UNITS_DAILY_PRECIP_CENTIMETERS)
+    return millimeters_to_centimeters(millimeters);
+  #else // UNITS_HOURLY_PRECIP_MILLIMETERS or UNITS_DAILY_PRECIP_MILLIMETERS
+    return millimeters;
+  #endif
+}
+
+// Function to convert all units in WeatherData object
+void convertWeatherDataUnits(WeatherData &data)
+{
+    // Current weather
+    data.current.temp = convertTemperature(data.current.temp);
+    data.current.feels_like = convertTemperature(data.current.feels_like);
+    data.current.pressure = convertPressure(data.current.pressure);
+    data.current.visibility = convertVisibility(data.current.visibility);
+    data.current.wind_speed = convertWindSpeed(data.current.wind_speed);
+    data.current.wind_gust = convertWindSpeed(data.current.wind_gust);
+
+    // Hourly forecast
+    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
+    {
+        data.hourly[i].temp = convertTemperature(data.hourly[i].temp);
+        data.hourly[i].rain_1h = convertPrecipitation(data.hourly[i].rain_1h);
+        data.hourly[i].snow_1h = convertPrecipitation(data.hourly[i].snow_1h);
+        data.hourly[i].wind_speed = convertWindSpeed(data.hourly[i].wind_speed);
+        data.hourly[i].wind_gust = convertWindSpeed(data.hourly[i].wind_gust);
+    }
+
+    // Daily forecast
+    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
+    {
+        data.daily[i].temp_min = convertTemperature(data.daily[i].temp_min);
+        data.daily[i].temp_max = convertTemperature(data.daily[i].temp_max);
+        data.daily[i].rain = convertPrecipitation(data.daily[i].rain);
+        data.daily[i].snow = convertPrecipitation(data.daily[i].snow);
+        data.daily[i].wind_speed = convertWindSpeed(data.daily[i].wind_speed);
+        data.daily[i].wind_gust = convertWindSpeed(data.daily[i].wind_gust);
+    }
+}
 

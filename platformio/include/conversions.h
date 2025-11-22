@@ -18,6 +18,9 @@
 #ifndef __CONVERSIONS_H__
 #define __CONVERSIONS_H__
 
+#include <cstdint>
+#include "model/WeatherData.h"
+
 float kelvin_to_celsius(float kelvin);
 float kelvin_to_fahrenheit(float kelvin);
 float celsius_to_kelvin(float celsius);
@@ -42,8 +45,19 @@ float meters_to_kilometers(float meters);
 float meters_to_miles(float meters);
 float meters_to_feet(float meters);
 
-float millimeters_to_inches(float meters);
-float millimeters_to_centimeters(float meters);
+float millimeters_to_inches(float millimeters);
+float millimeters_to_centimeters(float millimeters);
+
+
+// New conversion functions from metric base units to configured units
+float convertTemperature(float celsius);         // Input: Celsius
+float convertWindSpeed(float metersPerSecond); // Input: Meters per second
+float convertPressure(float hectopascals);     // Input: Hectopascals
+float convertVisibility(float meters);          // Input: Meters
+float convertPrecipitation(float millimeters); // Input: Millimeters (volume)
+
+// Function to convert all units in WeatherData object
+void convertWeatherDataUnits(WeatherData &data);
 
 #endif
 
