@@ -54,8 +54,6 @@ int OpenWeatherMapProvider::fetchWeatherData(WeatherData &data)
         return air_http_code;
     }
 
-    convertUnits(data);
-
     return HTTP_CODE_OK;
 }
 
@@ -122,9 +120,10 @@ int OpenWeatherMapProvider::fetchAirPollutionData(WeatherData &data)
     char startStr[22];
     sprintf(endStr, "%lld", end);
     sprintf(startStr, "%lld", start);
-    String uri = "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON + "&start=" + startStr + "&end=" + endStr + "&appid=" + APIKEY;
+    String uri = "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON + "&start=" + startStr + "&end=" + endStr;
 
-    String sanitizedUri = API_ENDPOINT + uri;
+    String sanitizedUri = API_ENDPOINT + uri + "&appid={API key}";
+    uri += "&appid=" + APIKEY;
 
     Serial.print(TXT_ATTEMPTING_HTTP_REQ);
     Serial.println(": " + sanitizedUri);
@@ -325,151 +324,4 @@ DeserializationError OpenWeatherMapProvider::deserializeAirQuality(WiFiClient &j
 
     return error;
 }
-
-void OpenWeatherMapProvider::convertUnits(WeatherData &data)
-{
-#if defined(UNITS_TEMP_FAHRENHEIT)
-    data.current.temp = celsius_to_fahrenheit(data.current.temp);
-    data.current.feels_like = celsius_to_fahrenheit(data.current.feels_like);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].temp = celsius_to_fahrenheit(data.hourly[i].temp);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].temp_min = celsius_to_fahrenheit(data.daily[i].temp_min);
-        data.daily[i].temp_max = celsius_to_fahrenheit(data.daily[i].temp_max);
-    }
-#elif defined(UNITS_TEMP_KELVIN)
-    data.current.temp = celsius_to_kelvin(data.current.temp);
-    data.current.feels_like = celsius_to_kelvin(data.current.feels_like);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].temp = celsius_to_kelvin(data.hourly[i].temp);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].temp_min = celsius_to_kelvin(data.daily[i].temp_min);
-        data.daily[i].temp_max = celsius_to_kelvin(data.daily[i].temp_max);
-    }
-#endif
-
-#if defined(UNITS_SPEED_FEETPERSECOND)
-    data.current.wind_speed = meterspersecond_to_feetpersecond(data.current.wind_speed);
-    data.current.wind_gust = meterspersecond_to_feetpersecond(data.current.wind_gust);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].wind_speed = meterspersecond_to_feetpersecond(data.hourly[i].wind_speed);
-        data.hourly[i].wind_gust = meterspersecond_to_feetpersecond(data.hourly[i].wind_gust);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].wind_speed = meterspersecond_to_feetpersecond(data.daily[i].wind_speed);
-        data.daily[i].wind_gust = meterspersecond_to_feetpersecond(data.daily[i].wind_gust);
-    }
-#elif defined(UNITS_SPEED_KILOMETERSPERHOUR)
-    data.current.wind_speed = meterspersecond_to_kilometersperhour(data.current.wind_speed);
-    data.current.wind_gust = meterspersecond_to_kilometersperhour(data.current.wind_gust);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].wind_speed = meterspersecond_to_kilometersperhour(data.hourly[i].wind_speed);
-        data.hourly[i].wind_gust = meterspersecond_to_kilometersperhour(data.hourly[i].wind_gust);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].wind_speed = meterspersecond_to_kilometersperhour(data.daily[i].wind_speed);
-        data.daily[i].wind_gust = meterspersecond_to_kilometersperhour(data.daily[i].wind_gust);
-    }
-#elif defined(UNITS_SPEED_MILESPERHOUR)
-    data.current.wind_speed = meterspersecond_to_milesperhour(data.current.wind_speed);
-    data.current.wind_gust = meterspersecond_to_milesperhour(data.current.wind_gust);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].wind_speed = meterspersecond_to_milesperhour(data.hourly[i].wind_speed);
-        data.hourly[i].wind_gust = meterspersecond_to_milesperhour(data.hourly[i].wind_gust);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].wind_speed = meterspersecond_to_milesperhour(data.daily[i].wind_speed);
-        data.daily[i].wind_gust = meterspersecond_to_milesperhour(data.daily[i].wind_gust);
-    }
-#elif defined(UNITS_SPEED_KNOTS)
-    data.current.wind_speed = meterspersecond_to_knots(data.current.wind_speed);
-    data.current.wind_gust = meterspersecond_to_knots(data.current.wind_gust);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].wind_speed = meterspersecond_to_knots(data.hourly[i].wind_speed);
-        data.hourly[i].wind_gust = meterspersecond_to_knots(data.hourly[i].wind_gust);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].wind_speed = meterspersecond_to_knots(data.daily[i].wind_speed);
-        data.daily[i].wind_gust = meterspersecond_to_knots(data.daily[i].wind_gust);
-    }
-#elif defined(UNITS_SPEED_BEAUFORT)
-    data.current.wind_speed = meterspersecond_to_beaufort(data.current.wind_speed);
-    data.current.wind_gust = meterspersecond_to_beaufort(data.current.wind_gust);
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].wind_speed = meterspersecond_to_beaufort(data.hourly[i].wind_speed);
-        data.hourly[i].wind_gust = meterspersecond_to_beaufort(data.hourly[i].wind_gust);
-    }
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].wind_speed = meterspersecond_to_beaufort(data.daily[i].wind_speed);
-        data.daily[i].wind_gust = meterspersecond_to_beaufort(data.daily[i].wind_gust);
-    }
-#endif
-
-#if defined(UNITS_PRES_PASCALS)
-    data.current.pressure = hectopascals_to_pascals(data.current.pressure);
-#elif defined(UNITS_PRES_MILLIMETERSOFMERCURY)
-    data.current.pressure = hectopascals_to_millimetersofmercury(data.current.pressure);
-#elif defined(UNITS_PRES_INCHESOFMERCURY)
-    data.current.pressure = hectopascals_to_inchesofmercury(data.current.pressure);
-#elif defined(UNITS_PRES_MILLIBARS)
-    data.current.pressure = hectopascals_to_millibars(data.current.pressure);
-#elif defined(UNITS_PRES_ATMOSPHERES)
-    data.current.pressure = hectopascals_to_atmospheres(data.current.pressure);
-#elif defined(UNITS_PRES_GRAMSPERSQUARECENTIMETER)
-    data.current.pressure = hectopascals_to_gramspersquarecentimeter(data.current.pressure);
-#elif defined(UNITS_PRES_POUNDSPERSQUAREINCH)
-    data.current.pressure = hectopascals_to_poundspersquareinch(data.current.pressure);
-#endif
-
-#if defined(UNITS_DIST_MILES)
-    data.current.visibility = meters_to_miles(data.current.visibility);
-#elif defined(UNITS_DIST_KILOMETERS)
-    data.current.visibility = meters_to_kilometers(data.current.visibility);
-#endif
-
-#if defined(UNITS_HOURLY_PRECIP_CENTIMETERS)
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].rain_1h = millimeters_to_centimeters(data.hourly[i].rain_1h);
-        data.hourly[i].snow_1h = millimeters_to_centimeters(data.hourly[i].snow_1h);
-    }
-#elif defined(UNITS_HOURLY_PRECIP_INCHES)
-    for (int i = 0; i < MAX_HOURLY_FORECASTS; ++i)
-    {
-        data.hourly[i].rain_1h = millimeters_to_inches(data.hourly[i].rain_1h);
-        data.hourly[i].snow_1h = millimeters_to_inches(data.hourly[i].snow_1h);
-    }
-#endif
-
-#if defined(UNITS_DAILY_PRECIP_CENTIMETERS)
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].rain = millimeters_to_centimeters(data.daily[i].rain);
-        data.daily[i].snow = millimeters_to_centimeters(data.daily[i].snow);
-    }
-#elif defined(UNITS_DAILY_PRECIP_INCHES)
-    for (int i = 0; i < MAX_DAILY_FORECASTS; ++i)
-    {
-        data.daily[i].rain = millimeters_to_inches(data.daily[i].rain);
-        data.daily[i].snow = millimeters_to_inches(data.daily[i].snow);
-    }
-#endif
-}
-
 #endif

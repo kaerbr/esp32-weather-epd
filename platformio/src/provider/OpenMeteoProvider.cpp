@@ -37,44 +37,23 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
 {
     log_d("Fetching weather data from Open-Meteo...");
 
-    String temp_unit;
-#if defined(UNITS_TEMP_CELSIUS)
-    temp_unit = "celsius";
-#elif defined(UNITS_TEMP_FAHRENHEIT)
-    temp_unit = "fahrenheit";
-#else
-    // Default to celsius if no specific temperature unit is defined.
-    // The config validation in config.h should prevent this case.
-    temp_unit = "celsius";
-#endif
-
-    String wind_unit;
-#if defined(UNITS_SPEED_KILOMETERSPERHOUR)
-    wind_unit = "kmh";
-#elif defined(UNITS_SPEED_MILESPERHOUR)
-    wind_unit = "mph";
-#elif defined(UNITS_SPEED_METERSPERSECOND)
-    wind_unit = "ms";
-#elif defined(UNITS_SPEED_KNOTS)
-    wind_unit = "kn";
-#else
-    // Default to m/s if no specific wind speed unit is defined.
-    // The config validation in config.h should prevent this case.
-    wind_unit = "ms";
-#endif
+    const char* temperature_unit = "celsius";
+    const char* wind_speed_unit = "ms";
+    const char* precipitation_unit = "mm";
 
     JsonDocument doc;
 
     {
         HTTPClient http;
         String server = "api.open-meteo.com";
-        String url = "/v1/forecast?latitude=" + LAT +
-                    "&longitude=" + LON +
+        String url = String("/v1/forecast?") +
+                    "latitude=" + LAT + "&longitude=" + LON +
                     "&current=temperature_2m,apparent_temperature,relativehumidity_2m,surface_pressure,windspeed_10m,winddirection_10m,windgusts_10m,weathercode,visibility" +
                     "&hourly=weathercode,temperature_2m,precipitation_probability,rain,snowfall,cloudcover,windspeed_10m,windgusts_10m" +
                     "&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,rain_sum,snowfall_sum,precipitation_probability_max,windspeed_10m_max,windgusts_10m_max" +
-                    "&temperature_unit=" + temp_unit +
-                    "&windspeed_unit=" + wind_unit +
+                    "&temperature_unit=" + temperature_unit +
+                    "&wind_speed_unit=" + wind_speed_unit +
+                    "&precipitation_unit=" + precipitation_unit +
                     "&forecast_days=" + MAX_DAILY_FORECASTS +
                     "&timeformat=unixtime&timezone=auto";
 
@@ -84,6 +63,8 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
         if (httpCode != HTTP_CODE_OK) return httpCode;
 
         String payload = http.getString();
+        // Serial.println(url);
+        // Serial.println(payload);
         http.end();
 
         deserializeJson(doc, payload);
@@ -104,13 +85,7 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     data.current.wind_gust = current["windgusts_10m"];
     data.current.uvi = daily["uv_index_max"][0];
     data.current.pressure = current["surface_pressure"];
-#if defined(UNITS_DIST_KILOMETERS)
-    data.current.visibility = current["visibility"].as<float>() / 1000.0f; // meters to kilometers
-#elif defined(UNITS_DIST_MILES)
-    data.current.visibility = current["visibility"].as<float>() / 1609.34f; // meters to miles
-#else
-    data.current.visibility = current["visibility"]; // Default to meters if no unit defined
-#endif
+    data.current.visibility = current["visibility"]; // visibility is in meters
     data.current.weather.id = current["weathercode"];
     data.current.weather.main = "";      // Open-Meteo does not provide this
     data.current.weather.description = ""; // Open-Meteo does not provide this

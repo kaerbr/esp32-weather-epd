@@ -29,14 +29,14 @@ struct CurrentWeather
   int64_t dt;       // Current time, Unix, UTC
   int64_t sunrise;  // Sunrise time, Unix, UTC
   int64_t sunset;   // Sunset time, Unix, UTC
-  float temp;       // Temperature, in units defined by config.h
-  float feels_like; // "Feels like" temperature, in units defined by config.h
-  int pressure;     // Atmospheric pressure on the sea level, in units defined by config.h
+  float temp;       // Temperature, in Celsius
+  float feels_like; // "Feels like" temperature, in Celsius
+  int pressure;     // Atmospheric pressure on the sea level, in Hectopascals
   int humidity;     // Humidity, %
   float uvi;        // UV index
-  int visibility;   // Average visibility, in units defined by config.h
-  float wind_speed; // Wind speed, in units defined by config.h
-  float wind_gust;  // Wind gust, in units defined by config.h
+  int visibility;   // Average visibility, in Meters
+  float wind_speed; // Wind speed, in Meters per second
+  float wind_gust;  // Wind gust, in Meters per second
   int wind_deg;     // Wind direction, degrees (meteorological)
   int clouds;       // Cloudiness, %
   WeatherCondition weather;
@@ -46,13 +46,13 @@ struct CurrentWeather
 struct HourlyWeather
 {
   int64_t dt;       // Time of the forecasted data, Unix, UTC
-  float temp;       // Temperature, in units defined by config.h
+  float temp;       // Temperature, in Celsius
   float pop;        // Probability of precipitation (0.0 to 1.0)
-  float rain_1h;    // Rain volume for the last hour, in units defined by config.h
-  float snow_1h;    // Snow volume for the last hour, in units defined by config.h
+  float rain_1h;    // Rain volume for the last hour, in Millimeters
+  float snow_1h;    // Snow volume for the last hour, in Millimeters
   int clouds;       // Cloudiness, %
-  float wind_speed; // Wind speed, in units defined by config.h
-  float wind_gust;  // Wind gust, in units defined by config.h
+  float wind_speed; // Wind speed, in Meters per second
+  float wind_gust;  // Wind gust, in Meters per second
   WeatherCondition weather;
 };
 
@@ -65,14 +65,14 @@ struct DailyWeather
   int64_t moonrise; // Moonrise time, Unix, UTC
   int64_t moonset;  // Moonset time, Unix, UTC
   float moon_phase; // Moon phase
-  float temp_min;   // Min daily temperature, in units defined by config.h
-  float temp_max;   // Max daily temperature, in units defined by config.h
+  float temp_min;   // Min daily temperature, in Celsius
+  float temp_max;   // Max daily temperature, in Celsius
   float pop;        // Probability of precipitation (0.0 to 1.0)
-  float rain;       // Precipitation volume, in units defined by config.h
-  float snow;       // Snow volume, in units defined by config.h
+  float rain;       // Precipitation volume, in Millimeters
+  float snow;       // Snow volume, in Millimeters
   int clouds;       // Cloudiness, %
-  float wind_speed; // Wind speed, in units defined by config.h
-  float wind_gust;  // Wind gust, in units defined by config.h
+  float wind_speed; // Wind speed, in Meters per second
+  float wind_gust;  // Wind gust, in Meters per second
   WeatherCondition weather;
 };
 

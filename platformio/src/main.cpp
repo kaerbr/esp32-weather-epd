@@ -28,6 +28,7 @@
 #include "_locale.h"
 #include "client_utils.h"
 #include "config.h"
+#include "conversions.h"
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
 #include "renderer.h"
@@ -277,7 +278,11 @@ void setup()
     powerOffDisplay();
     beginDeepSleep(startTime, &timeInfo);
   }
+
   killWiFi(); // WiFi no longer needed
+
+  // Convert all weather data to the user-configured units
+  convertWeatherDataUnits(weatherData);
 
   // GET INDOOR TEMPERATURE AND HUMIDITY, start BMEx80...
   pinMode(PIN_BME_PWR, OUTPUT);

@@ -465,7 +465,7 @@ bool isWindy(float wind_speed, float wind_gust) {
       || wind_gust  >= 40.2 /*m/s*/);
 }
 
-#if defined(USE_PROVIDER_OPENWEATHERMAP)
+#ifdef USE_PROVIDER_OPENWEATHERMAP
 /* Takes the current weather and today's daily weather forcast (from
  * OpenWeatherMap API response) and returns a pointer to the icon's 196x196
  * bitmap.
@@ -621,23 +621,21 @@ const uint8_t *getConditionsBitmap(int id, bool day, bool moon, bool cloudy,
     return getBitmap(wi_na, BitmapSize);
   }
 } // end getConditionsBitmap
-#endif
-
-#if defined(USE_PROVIDER_OPENMETEO)
-/* Takes the current weather and today's daily weather forcast (from
- * OpenMeteo API response) and returns a pointer to the icon's 196x196
+#else
+/* Takes the current weather and today's daily weather forcast and
+ * returns a pointer to the icon's 196x196
  * bitmap.
  *
- * Uses multiple factors to return more detailed icons than the simple icon
- * catagories that OpenMeteo provides.
+ * Uses multiple factors to return more detailed icons than the wmo
+ * codes that are provided.
  *
- * Last Updated: June 13, 2025
+ * Last Updated: November 22, 2025
 */
 template <int BitmapSize>
-const uint8_t *getConditionsBitmap(int id, bool day, bool moon, bool cloudy,
+const uint8_t *getConditionsBitmap(int wmo_code, bool day, bool moon, bool cloudy,
                                    bool windy)
 {
-  switch (id)
+  switch (wmo_code)
   {
     case 0: // Clear         clear sky                        01d 01n
       if (windy)                            {return getBitmap(wi_strong_wind, BitmapSize);}
