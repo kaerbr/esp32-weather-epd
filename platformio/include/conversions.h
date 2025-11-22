@@ -15,49 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __CONVERSIONS_H__
-#define __CONVERSIONS_H__
+#pragma once
 
-#include <cstdint>
 #include "model/WeatherData.h"
-
-float kelvin_to_celsius(float kelvin);
-float kelvin_to_fahrenheit(float kelvin);
-float celsius_to_kelvin(float celsius);
-float celsius_to_fahrenheit(float celsius);
-
-float meterspersecond_to_feetpersecond(float meterspersecond);
-float meterspersecond_to_kilometersperhour(float meterspersecond);
-float meterspersecond_to_milesperhour(float meterspersecond);
-float meterspersecond_to_knots(float meterspersecond);
-int meterspersecond_to_beaufort(float meterspersecond);
-float kilometersperhour_to_meterspersecond(float kilometersperhour);
-
-float hectopascals_to_pascals(float hectopascals);
-float hectopascals_to_millimetersofmercury(float hectopascals);
-float hectopascals_to_inchesofmercury(float hectopascals);
-float hectopascals_to_millibars(float hectopascals);
-float hectopascals_to_atmospheres(float hectopascals);
-float hectopascals_to_gramspersquarecentimeter(float hectopascals);
-float hectopascals_to_poundspersquareinch(float hectopascals);
-
-float meters_to_kilometers(float meters);
-float meters_to_miles(float meters);
-float meters_to_feet(float meters);
-
-float millimeters_to_inches(float millimeters);
-float millimeters_to_centimeters(float millimeters);
-
-
-// New conversion functions from metric base units to configured units
-float convertTemperature(float celsius);         // Input: Celsius
-float convertWindSpeed(float metersPerSecond); // Input: Meters per second
-float convertPressure(float hectopascals);     // Input: Hectopascals
-float convertVisibility(float meters);          // Input: Meters
-float convertPrecipitation(float millimeters); // Input: Millimeters (volume)
 
 // Function to convert all units in WeatherData object
 void convertWeatherDataUnits(WeatherData &data);
-
-#endif
-
