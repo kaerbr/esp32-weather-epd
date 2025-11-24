@@ -48,9 +48,9 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
         String server = "api.open-meteo.com";
         String url = String("/v1/forecast?") +
                     "latitude=" + LAT + "&longitude=" + LON +
-                    "&current=temperature_2m,apparent_temperature,relativehumidity_2m,surface_pressure,windspeed_10m,winddirection_10m,windgusts_10m,weathercode,visibility" +
+                    "&current=temperature_2m,apparent_temperature,relativehumidity_2m,surface_pressure,windspeed_10m,winddirection_10m,windgusts_10m,weathercode,visibility,cloud_cover" +
                     "&hourly=weathercode,temperature_2m,precipitation_probability,rain,snowfall,cloudcover,windspeed_10m,windgusts_10m" +
-                    "&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,rain_sum,snowfall_sum,precipitation_probability_max,windspeed_10m_max,windgusts_10m_max" +
+                    "&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,rain_sum,snowfall_sum,precipitation_probability_max,windspeed_10m_max,windgusts_10m_max" +
                     "&temperature_unit=" + temperature_unit +
                     "&wind_speed_unit=" + wind_speed_unit +
                     "&precipitation_unit=" + precipitation_unit +
@@ -83,13 +83,11 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
     data.current.wind_deg = current["winddirection_10m"];
     data.current.wind_speed = current["windspeed_10m"];
     data.current.wind_gust = current["windgusts_10m"];
-    data.current.uvi = daily["uv_index_max"][0];
+    // data.current.uvi = daily["uv_index"][0];
     data.current.pressure = current["surface_pressure"];
-    data.current.visibility = current["visibility"]; // visibility is in meters
+    data.current.visibility = current["visibility"];
+    data.current.cloudiness = current["cloud_cover"];
     data.current.weather.id = current["weathercode"];
-    data.current.weather.main = "";      // Open-Meteo does not provide this
-    data.current.weather.description = ""; // Open-Meteo does not provide this
-    data.current.weather.icon = "";         // Open-Meteo does not provide this
 
     // Fill data.daily with real data from the API
     //JsonArray daily_time = daily["time"];
@@ -99,15 +97,15 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
       data.daily[i].dt = daily["time"][i];
       data.daily[i].sunrise = daily["sunrise"][i];
       data.daily[i].sunset = daily["sunset"][i];
-      data.daily[i].moonrise = 0; // Default to 0 as no real data from API
-      data.daily[i].moonset = 0;   // Default to 0 as no real data from API
-      data.daily[i].moon_phase = 0.0f; // Default to 0.0f as no real data from API
+    //   data.daily[i].moonrise = 0; // Default to 0 as no real data from API
+    //   data.daily[i].moonset = 0;   // Default to 0 as no real data from API
+    //   data.daily[i].moon_phase = 0.0f; // Default to 0.0f as no real data from API
       data.daily[i].temp_min = daily["temperature_2m_min"][i];
       data.daily[i].temp_max = daily["temperature_2m_max"][i];
       data.daily[i].pop = daily["precipitation_probability_max"][i].as<float>() / 100.0f;
       data.daily[i].rain = daily["rain_sum"][i];
       data.daily[i].snow = daily["snowfall_sum"][i];
-      data.daily[i].clouds = 0; // Not provided by Open-Meteo daily forecast
+      data.daily[i].cloudiness = 0; // Not provided by Open-Meteo daily forecast
       data.daily[i].wind_speed = daily["windspeed_10m_max"][i];
       data.daily[i].wind_gust = daily["windgusts_10m_max"][i];
       data.daily[i].weather = {daily["weathercode"][i], "", "", ""};
@@ -145,7 +143,7 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
       data.hourly[i].pop = hourly["precipitation_probability"][dataIndex].as<float>() / 100.0f;
       data.hourly[i].rain_1h = hourly["rain"][dataIndex];
       data.hourly[i].snow_1h = hourly["snowfall"][dataIndex];
-      data.hourly[i].clouds = hourly["cloudcover"][dataIndex];
+      data.hourly[i].cloudiness = hourly["cloudcover"][dataIndex];
       data.hourly[i].wind_speed = hourly["windspeed_10m"][dataIndex];
       data.hourly[i].wind_gust = hourly["windgusts_10m"][dataIndex];
       data.hourly[i].weather = {hourly["weathercode"][dataIndex], "", "", ""};
@@ -173,9 +171,11 @@ int OpenMeteoProvider::fetchWeatherData(WeatherData &data)
 
         doc.clear(); // Clear the document before reusing
         deserializeJson(doc, aq_payload);
-
         JsonObject aq_hourly = doc["hourly"];
+        JsonObject aq_current = doc["current"];
         JsonArray aq_time = aq_hourly["time"];
+
+        data.current.uvi = aq_current["uv_index"];
 
         // Find the starting index for the air quality data.
         // Find the last hourly timestamp that is less than or equal to the current time.

@@ -450,8 +450,8 @@ bool isMoonInSky(int64_t current_dt, int64_t moonrise_dt, int64_t moonset_dt,
  * References:
  *   https://www.weather.gov/ajk/ForecastTerms
  */
-bool isCloudy(int clouds) {
-  return clouds > 60.25; // partly cloudy / partly sunny
+bool isCloudy(int cloudiness) {
+  return cloudiness > 60.25; // partly cloudy / partly sunny
 }
 
 /* Takes wind speed and wind gust speed and returns true if it is windy, false
@@ -737,7 +737,7 @@ const uint8_t *getHourlyForecastBitmap32(const HourlyWeather &hourly,
   const bool day = isDay(hourly.dt, today.sunrise, today.sunset);
   const bool moon = isMoonInSky(hourly.dt, today.moonrise, today.moonset,
                                 today.moon_phase);
-  const bool cloudy = isCloudy(hourly.clouds);
+  const bool cloudy = isCloudy(hourly.cloudiness);
   const bool windy = isWindy(hourly.wind_speed, hourly.wind_gust);
   return getConditionsBitmap<32>(id, day, moon, cloudy, windy);
 }
@@ -751,7 +751,7 @@ const uint8_t *getDailyForecastBitmap64(const DailyWeather &daily)
   // always show daytime icon for daily forecast
   const bool day = true;
   const bool moon = false;
-  const bool cloudy = isCloudy(daily.clouds);
+  const bool cloudy = isCloudy(daily.cloudiness);
   const bool windy = isWindy(daily.wind_speed, daily.wind_gust);
   return getConditionsBitmap<64>(id, day, moon, cloudy, windy);
 } // end getForecastBitmap64
@@ -769,7 +769,7 @@ const uint8_t *getCurrentConditionsBitmap196(const CurrentWeather &current,
   const bool day = isDay(current.dt, current.sunrise, current.sunset);
   const bool moon = isMoonInSky(current.dt, today.moonrise, today.moonset,
                                 today.moon_phase);
-  const bool cloudy = isCloudy(current.clouds);
+  const bool cloudy = isCloudy(current.cloudiness);
   const bool windy = isWindy(current.wind_speed, current.wind_gust);
   return getConditionsBitmap<196>(id, day, moon, cloudy, windy);
 } // end getCurrentConditionsBitmap196

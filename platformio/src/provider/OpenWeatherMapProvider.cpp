@@ -216,7 +216,7 @@ DeserializationError OpenWeatherMapProvider::deserializeOneCall(WiFiClient &json
     data.current.wind_speed = current["wind_speed"].as<float>();
     data.current.wind_gust = current["wind_gust"].as<float>();
     data.current.wind_deg = current["wind_deg"].as<int>();
-    data.current.clouds = current["clouds"].as<int>();
+    data.current.cloudiness = current["cloudiness"].as<int>();
     JsonObject current_weather = current["weather"][0];
     data.current.weather.id = current_weather["id"].as<int>();
     data.current.weather.main = current_weather["main"].as<const char *>();
@@ -233,7 +233,7 @@ DeserializationError OpenWeatherMapProvider::deserializeOneCall(WiFiClient &json
         data.hourly[i].pop = hourly["pop"].as<float>();
         data.hourly[i].rain_1h = hourly["rain"]["1h"].as<float>();
         data.hourly[i].snow_1h = hourly["snow"]["1h"].as<float>();
-        data.hourly[i].clouds = hourly["clouds"].as<int>();
+        data.hourly[i].cloudiness = hourly["cloudiness"].as<int>();
         data.hourly[i].wind_speed = hourly["wind_speed"].as<float>();
         data.hourly[i].wind_gust = hourly["wind_gust"].as<float>();
         JsonObject hourly_weather = hourly["weather"][0];
@@ -259,7 +259,7 @@ DeserializationError OpenWeatherMapProvider::deserializeOneCall(WiFiClient &json
         data.daily[i].pop = daily["pop"].as<float>();
         data.daily[i].rain = daily["rain"].as<float>();
         data.daily[i].snow = daily["snow"].as<float>();
-        data.daily[i].clouds = daily["clouds"].as<int>();
+        data.daily[i].cloudiness = daily["cloudiness"].as<int>();
         data.daily[i].wind_speed = daily["wind_speed"].as<float>();
         data.daily[i].wind_gust = daily["wind_gust"].as<float>();
         JsonObject daily_weather = daily["weather"][0];

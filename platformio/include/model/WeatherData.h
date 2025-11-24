@@ -38,7 +38,7 @@ struct CurrentWeather
   float wind_speed; // Wind speed, in Meters per second
   float wind_gust;  // Wind gust, in Meters per second
   int wind_deg;     // Wind direction, degrees (meteorological)
-  int clouds;       // Cloudiness, %
+  int cloudiness;   // Cloudiness, %
   WeatherCondition weather;
 };
 
@@ -50,7 +50,7 @@ struct HourlyWeather
   float pop;        // Probability of precipitation (0.0 to 1.0)
   float rain_1h;    // Rain volume for the last hour, in Millimeters
   float snow_1h;    // Snow volume for the last hour, in Millimeters
-  int clouds;       // Cloudiness, %
+  int cloudiness;   // Cloudiness, %
   float wind_speed; // Wind speed, in Meters per second
   float wind_gust;  // Wind gust, in Meters per second
   WeatherCondition weather;
@@ -70,7 +70,7 @@ struct DailyWeather
   float pop;        // Probability of precipitation (0.0 to 1.0)
   float rain;       // Precipitation volume, in Millimeters
   float snow;       // Snow volume, in Millimeters
-  int clouds;       // Cloudiness, %
+  int cloudiness;   // Cloudiness, %
   float wind_speed; // Wind speed, in Meters per second
   float wind_gust;  // Wind gust, in Meters per second
   WeatherCondition weather;
