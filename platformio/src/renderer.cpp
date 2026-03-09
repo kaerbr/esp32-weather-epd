@@ -20,6 +20,7 @@
 #include "renderer.h"
 #include "model/WeatherData.h"
 #include "config.h"
+#include "conversions.h"
 #include "display_utils.h"
 
 // fonts
@@ -503,7 +504,16 @@ void drawCurrentConditions(const CurrentWeather &current,
   display.setFont(&FONT_12pt8b);
   if (!std::isnan(inTemp))
   {
+#ifdef UNITS_TEMP_KELVIN
+    dataStr = String(std::round(celsius_to_kelvin(inTemp) * 10) / 10.0f, 1);
+#endif
+#ifdef UNITS_TEMP_CELSIUS
     dataStr = String(std::round(inTemp * 10) / 10.0f, 1);
+#endif
+#ifdef UNITS_TEMP_FAHRENHEIT
+    dataStr = String(static_cast<int>(
+              std::round(celsius_to_fahrenheit(inTemp))));
+#endif
   }
   else
   {
