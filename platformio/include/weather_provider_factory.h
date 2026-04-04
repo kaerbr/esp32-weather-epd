@@ -1,5 +1,5 @@
-/* Client side utility declarations for esp32-weather-epd.
- * Copyright (C) 2022-2023  Luke Marzen
+/* Factory for creating weather provider instances.
+ * Copyright (C) 2022-2026  Luke Marzen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __CLIENT_UTILS_H__
-#define __CLIENT_UTILS_H__
+#ifndef __WEATHER_PROVIDER_FACTORY_H__
+#define __WEATHER_PROVIDER_FACTORY_H__
 
-#include <Arduino.h>
-#include "config.h"
+#include "weather_provider.h"
+#include <WiFiClient.h>
 
-wl_status_t startWiFi(int &wifiRSSI);
-void killWiFi();
-bool waitForSNTPSync(tm *timeInfo);
-bool printLocalTime(tm *timeInfo);
+class WeatherProviderFactory
+{
+public:
+  static WeatherProvider* createProvider(WiFiClient &client);
+};
 
 #endif

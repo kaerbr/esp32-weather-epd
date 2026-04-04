@@ -1,5 +1,5 @@
-/* Client side utility declarations for esp32-weather-epd.
- * Copyright (C) 2022-2023  Luke Marzen
+/* OpenWeatherMap provider declaration for esp32-weather-epd.
+ * Copyright (C) 2022-2026  Luke Marzen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __CLIENT_UTILS_H__
-#define __CLIENT_UTILS_H__
+#ifndef __OWM_PROVIDER_H__
+#define __OWM_PROVIDER_H__
 
-#include <Arduino.h>
-#include "config.h"
+#include "weather_provider.h"
 
-wl_status_t startWiFi(int &wifiRSSI);
-void killWiFi();
-bool waitForSNTPSync(tm *timeInfo);
-bool printLocalTime(tm *timeInfo);
+class OpenWeatherMapProvider : public WeatherProvider
+{
+public:
+  explicit OpenWeatherMapProvider(WiFiClient &client);
+  int fetchData(weather_data_t &data) override;
+};
 
 #endif

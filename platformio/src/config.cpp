@@ -56,6 +56,7 @@ const unsigned long WIFI_TIMEOUT = 10000; // ms, WiFi connection timeout.
 //   -258 Deserialization Incomplete Input
 const unsigned HTTP_CLIENT_TCP_TIMEOUT = 10000; // ms
 
+#ifdef WEATHER_PROVIDER_OWM
 // OPENWEATHERMAP API
 // OpenWeatherMap API key, https://openweathermap.org/
 const String OWM_APIKEY   = "abcdefghijklmnopqrstuvwxyz012345";
@@ -75,6 +76,7 @@ const String OWM_ENDPOINT = "api.openweathermap.org";
 //   day (no more than)" to 1,000. This ensures you will never overrun the free
 //   calls.
 const String OWM_ONECALL_VERSION = "3.0";
+#endif
 
 // LOCATION
 // Set your latitude and longitude.
@@ -154,6 +156,14 @@ const unsigned long VERY_LOW_BATTERY_SLEEP_INTERVAL = 120; // (minutes)
 // Battery voltage calculations are based on a typical 3.7v LiPo.
 const uint32_t MAX_BATTERY_VOLTAGE = 4200; // (millivolts)
 const uint32_t MIN_BATTERY_VOLTAGE = 3000; // (millivolts)
+
+// Variables for OTA server
+// To enable the OTA server one has to hold a button defined here while starting
+// or restting the ESP32 board. If the board is not manually reset the board
+// will automatically reset itself into normal operation mode after the given
+// time.
+const uint8_t BTN_ENABLE_OTA_SERVER = 27;
+const uint16_t OTA_SERVER_TIMEOUT_SECONDS = 90;
 
 // See config.h for the below options
 // E-PAPER PANEL

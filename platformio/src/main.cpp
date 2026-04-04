@@ -22,14 +22,20 @@
 #include <time.h>
 #include <WiFi.h>
 #include <Wire.h>
+#include <ElegantOTA.h>
+#include <WebServer.h>
+
+#include <HTTPClient.h>
 
 #include "_locale.h"
-#include "api_response.h"
 #include "client_utils.h"
 #include "config.h"
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
 #include "renderer.h"
+#include "weather_data.h"
+#include "weather_provider.h"
+#include "weather_provider_factory.h"
 
 #if defined(SENSOR_BME280)
   #include <Adafruit_BME280.h>
@@ -37,18 +43,16 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
-#if defined(USE_HTTPS_WITH_CERT_VERIF) || defined(USE_HTTPS_WITH_CERT_VERIF)
-  #include <WiFiClientSecure.h>
-#endif
 #ifdef USE_HTTPS_WITH_CERT_VERIF
+  #include <WiFiClientSecure.h>
   #include "cert.h"
 #endif
 
-// too large to allocate locally on stack
-static owm_resp_onecall_t       owm_onecall;
-static owm_resp_air_pollution_t owm_air_pollution;
-
 Preferences prefs;
+
+// HTTP server listens on port 80
+WebServer server(80);
+bool otaMode = false;
 
 /* Put esp32 into ultra low-power deep sleep (<11μA).
  * Aligns wake time to the minute. Sleep times defined in config.cpp.
@@ -132,9 +136,22 @@ void setup()
 
 #if DEBUG_LEVEL >= 1
   printHeapUsage();
+  Serial.println("[debug] sizeof(weather_data_t): "
+                 + String(sizeof(weather_data_t)) + " B");
 #endif
 
-  disableBuiltinLED();
+  pinMode(BTN_ENABLE_OTA_SERVER, INPUT_PULLUP);
+  if(digitalRead(BTN_ENABLE_OTA_SERVER) == LOW)
+  { // Light LED to noify user that OTA server will be started (otaMode).
+    Serial.println("Starting OTA Server");
+    otaMode = true;
+    
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else
+  { // Disable all LEDs if not in otaMode.
+    disableBuiltinLED();
+  }
 
   // Open namespace for read/write to non-volatile storage
   prefs.begin(NVS_NAMESPACE, false);
@@ -207,7 +224,7 @@ void setup()
   tm timeInfo = {};
 
   // START WIFI
-  int wifiRSSI = 0; // “Received Signal Strength Indicator"
+  int wifiRSSI = 0; // "Received Signal Strength Indicator"
   wl_status_t wifiStatus = startWiFi(wifiRSSI);
   if (wifiStatus != WL_CONNECTED)
   { // WiFi Connection Failed
@@ -249,7 +266,25 @@ void setup()
     beginDeepSleep(startTime, &timeInfo);
   }
 
-  // MAKE API REQUESTS
+  // Start OTA server if button was pressed on start time
+  if (otaMode)
+  {
+    // Redirect / to /update as this is the only route beeing used.
+    server.on("/", []() {
+      server.sendHeader("Location", "/update");
+      server.send(302, "text/plain", "");
+    });
+    ElegantOTA.begin(&server);
+    server.begin();
+
+    Serial.println("OTA server started.");
+    Serial.printf("OTA server will be automatically shut down after ~%i seconds.", OTA_SERVER_TIMEOUT_SECONDS);
+    Serial.println();
+
+    // Exit setup() and immediately run loop().
+    return;
+  }
+
 #ifdef USE_HTTP
   WiFiClient client;
 #elif defined(USE_HTTPS_NO_CERT_VERIF)
@@ -259,25 +294,18 @@ void setup()
   WiFiClientSecure client;
   client.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
 #endif
-  int rxStatus = getOWMonecall(client, owm_onecall);
+
+  // INITIALIZE WEATHER PROVIDER
+  // too large to allocate locally on stack
+  static weather_data_t weatherData;
+  static WeatherProvider *weatherProvider = WeatherProviderFactory::createProvider(client);
+
+  // MAKE API REQUESTS
+  int rxStatus = weatherProvider->fetchData(weatherData);
   if (rxStatus != HTTP_CODE_OK)
   {
     killWiFi();
-    statusStr = "One Call " + OWM_ONECALL_VERSION + " API";
-    tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
-    initDisplay();
-    do
-    {
-      drawError(wi_cloud_down_196x196, statusStr, tmpStr);
-    } while (display.nextPage());
-    powerOffDisplay();
-    beginDeepSleep(startTime, &timeInfo);
-  }
-  rxStatus = getOWMairpollution(client, owm_air_pollution);
-  if (rxStatus != HTTP_CODE_OK)
-  {
-    killWiFi();
-    statusStr = "Air Pollution API";
+    statusStr = weatherProvider->providerName + " API";
     tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
     initDisplay();
     do
@@ -346,15 +374,16 @@ void setup()
   initDisplay();
   do
   {
-    drawCurrentConditions(owm_onecall.current, owm_onecall.daily[0],
-                          owm_air_pollution, inTemp, inHumidity);
-    drawOutlookGraph(owm_onecall.hourly, owm_onecall.daily, timeInfo);
-    drawForecast(owm_onecall.daily, timeInfo);
+    drawCurrentConditions(weatherData.current, weatherData.daily[0],
+                          weatherData.air_quality, inTemp, inHumidity);
+    drawOutlookGraph(weatherData.hourly, weatherData.daily, timeInfo);
+    drawForecast(weatherData.daily, timeInfo);
     drawLocationDate(CITY_STRING, dateStr);
 #if DISPLAY_ALERTS
-    drawAlerts(owm_onecall.alerts, CITY_STRING, dateStr);
+    drawAlerts(weatherData.alerts, weatherData.num_alerts, CITY_STRING, dateStr);
 #endif
-    drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage);
+    drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage,
+                  weatherProvider->providerName.c_str());
   } while (display.nextPage());
   powerOffDisplay();
 
@@ -362,9 +391,19 @@ void setup()
   beginDeepSleep(startTime, &timeInfo);
 } // end setup
 
-/* This will never run
+/* This will only run if the OTA server runs
  */
 void loop()
 {
-} // end loop
+  if (otaMode)
+  {
+    server.handleClient();
+    ElegantOTA.loop();
 
+    if (OTA_SERVER_TIMEOUT_SECONDS != 0 && millis() > OTA_SERVER_TIMEOUT_SECONDS * 1000)
+    {
+      Serial.println("Shutting down OTA Server & rebooting into normal operation mode.");
+      ESP.restart();
+    }
+  }
+} // end loop
