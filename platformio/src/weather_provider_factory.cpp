@@ -1,4 +1,4 @@
-/* Weather provider abstract base class for esp32-weather-epd.
+/* Factory for creating weather provider instances.
  * Copyright (C) 2022-2026  Luke Marzen
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,31 +15,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __WEATHER_PROVIDER_H__
-#define __WEATHER_PROVIDER_H__
-
-#include "weather_data.h"
+#include "weather_provider_factory.h"
 #include "config.h"
-#include <WiFiClient.h>
 
-class WeatherProvider
+#include "providers/owm_provider.h"
+
+WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient &client)
 {
-public:
-  WeatherProvider(WiFiClient &client) : wifi_client(client) {}
-  virtual ~WeatherProvider() = default;
-
-  virtual int fetchData(weather_data_t &data) = 0;
-
-  String providerName;
-
-#ifdef USE_HTTP
-  static const uint16_t PORT = 80;
+#if defined(WEATHER_PROVIDER_OWM)
+  return new OpenWeatherMapProvider(client);
 #else
-  static const uint16_t PORT = 443;
+  #error No weather provider selected. Define WEATHER_PROVIDER_OWM in config.h.
 #endif
-
-protected:
-  WiFiClient &wifi_client;
-};
-
-#endif
+}

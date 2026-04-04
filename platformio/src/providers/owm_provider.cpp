@@ -27,15 +27,6 @@
 #include "display_utils.h"
 #include "wmo_codes.h"
 
-#ifndef USE_HTTP
-  #include <WiFiClientSecure.h>
-#endif
-
-#ifdef USE_HTTP
-  static const uint16_t OWM_PORT = 80;
-#else
-  static const uint16_t OWM_PORT = 443;
-#endif
 
 static wmo_code_t owmIdToWmo(int owmId)
 {
@@ -330,18 +321,15 @@ static int deserializeAirQuality(WiFiClient &json, weather_data_t &data)
   return 0;
 }
 
-const char* OpenWeatherMapProvider::getName() const
+OpenWeatherMapProvider::OpenWeatherMapProvider(WiFiClient &client)
+  : WeatherProvider(client)
 {
-  return "OpenWeatherMap";
+  providerName = "OpenWeatherMap";
 }
 
-#ifdef USE_HTTP
-  int OpenWeatherMapProvider::fetchData(WiFiClient &client, weather_data_t &data)
-#else
-  int OpenWeatherMapProvider::fetchData(WiFiClientSecure &client, weather_data_t &data)
-#endif
+int OpenWeatherMapProvider::fetchData(weather_data_t &data)
 {
-  data.provider_name = getName();
+  data.provider_name = providerName.c_str();
 
   // --- OneCall API ---
   int attempts = 0;
@@ -370,7 +358,7 @@ const char* OpenWeatherMapProvider::getName() const
     HTTPClient http;
     http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT);
     http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);
-    http.begin(client, OWM_ENDPOINT, OWM_PORT, uri);
+    http.begin(wifi_client, OWM_ENDPOINT, PORT, uri);
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
@@ -384,7 +372,7 @@ const char* OpenWeatherMapProvider::getName() const
         rxSuccess = true;
       }
     }
-    client.stop();
+    wifi_client.stop();
     http.end();
     Serial.println("  " + String(httpResponse, DEC) + " "
                    + getHttpResponsePhrase(httpResponse));
@@ -429,7 +417,7 @@ const char* OpenWeatherMapProvider::getName() const
     HTTPClient http;
     http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT);
     http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);
-    http.begin(client, OWM_ENDPOINT, OWM_PORT, uri);
+    http.begin(wifi_client, OWM_ENDPOINT, PORT, uri);
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
@@ -443,7 +431,7 @@ const char* OpenWeatherMapProvider::getName() const
         rxSuccess = true;
       }
     }
-    client.stop();
+    wifi_client.stop();
     http.end();
     Serial.println("  " + String(httpResponse, DEC) + " "
                    + getHttpResponsePhrase(httpResponse));
