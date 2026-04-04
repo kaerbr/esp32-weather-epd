@@ -18,6 +18,7 @@
 #ifndef __WEATHER_DATA_H__
 #define __WEATHER_DATA_H__
 
+#include <algorithm>
 #include <cstdint>
 #include <cmath>
 #include <climits>
@@ -30,98 +31,98 @@ constexpr int MAX_AQ_HOURS = 24;
 
 typedef struct weather_condition
 {
-  wmo_code_t wmo_code;
-  char       description[64];
-  int        clouds;
+  wmo_code_t wmo_code   = WMO_UNKNOWN;
+  char       description[64] = {};
+  int        clouds      = INT32_MIN;
 } weather_condition_t;
 
 typedef struct weather_current
 {
-  int64_t             dt;
-  int64_t             sunrise;
-  int64_t             sunset;
-  float               temp;
-  float               feels_like;
-  int                 pressure;
-  int                 humidity;
-  float               dew_point;
-  float               uvi;
-  int                 visibility;
-  float               wind_speed;
-  float               wind_gust;
-  int                 wind_deg;
-  float               rain_1h;
-  float               snow_1h;
-  weather_condition_t condition;
+  int64_t             dt         = 0;
+  int64_t             sunrise    = 0;
+  int64_t             sunset     = 0;
+  float               temp       = NAN;
+  float               feels_like = NAN;
+  int                 pressure   = INT32_MIN;
+  int                 humidity   = INT32_MIN;
+  float               dew_point  = NAN;
+  float               uvi        = NAN;
+  int                 visibility = INT32_MIN;
+  float               wind_speed = NAN;
+  float               wind_gust  = NAN;
+  int                 wind_deg   = INT32_MIN;
+  float               rain_1h    = NAN;
+  float               snow_1h    = NAN;
+  weather_condition_t condition  = {};
 } weather_current_t;
 
 typedef struct weather_hourly
 {
-  int64_t             dt;
-  float               temp;
-  float               feels_like;
-  int                 pressure;
-  int                 humidity;
-  float               dew_point;
-  float               uvi;
-  int                 visibility;
-  float               wind_speed;
-  float               wind_gust;
-  int                 wind_deg;
-  float               pop;
-  float               rain_1h;
-  float               snow_1h;
-  weather_condition_t condition;
+  int64_t             dt         = 0;
+  float               temp       = NAN;
+  float               feels_like = NAN;
+  int                 pressure   = INT32_MIN;
+  int                 humidity   = INT32_MIN;
+  float               dew_point  = NAN;
+  float               uvi        = NAN;
+  int                 visibility = INT32_MIN;
+  float               wind_speed = NAN;
+  float               wind_gust  = NAN;
+  int                 wind_deg   = INT32_MIN;
+  float               pop        = NAN;
+  float               rain_1h    = NAN;
+  float               snow_1h    = NAN;
+  weather_condition_t condition  = {};
 } weather_hourly_t;
 
 typedef struct weather_temp
 {
-  float morn;
-  float day;
-  float eve;
-  float night;
-  float min;
-  float max;
+  float morn  = NAN;
+  float day   = NAN;
+  float eve   = NAN;
+  float night = NAN;
+  float min   = NAN;
+  float max   = NAN;
 } weather_temp_t;
 
 typedef struct weather_feels_like
 {
-  float morn;
-  float day;
-  float eve;
-  float night;
+  float morn  = NAN;
+  float day   = NAN;
+  float eve   = NAN;
+  float night = NAN;
 } weather_feels_like_t;
 
 typedef struct weather_daily
 {
-  int64_t              dt;
-  int64_t              sunrise;
-  int64_t              sunset;
-  int64_t              moonrise;
-  int64_t              moonset;
-  float                moon_phase;
-  weather_temp_t       temp;
-  weather_feels_like_t feels_like;
-  int                  pressure;
-  int                  humidity;
-  float                dew_point;
-  float                uvi;
-  int                  visibility;
-  float                wind_speed;
-  float                wind_gust;
-  int                  wind_deg;
-  float                pop;
-  float                rain;
-  float                snow;
-  weather_condition_t  condition;
+  int64_t              dt         = 0;
+  int64_t              sunrise    = 0;
+  int64_t              sunset     = 0;
+  int64_t              moonrise   = 0;
+  int64_t              moonset    = 0;
+  float                moon_phase = NAN;
+  weather_temp_t       temp       = {};
+  weather_feels_like_t feels_like = {};
+  int                  pressure   = INT32_MIN;
+  int                  humidity   = INT32_MIN;
+  float                dew_point  = NAN;
+  float                uvi        = NAN;
+  int                  visibility = INT32_MIN;
+  float                wind_speed = NAN;
+  float                wind_gust  = NAN;
+  int                  wind_deg   = INT32_MIN;
+  float                pop        = NAN;
+  float                rain       = NAN;
+  float                snow       = NAN;
+  weather_condition_t  condition  = {};
 } weather_daily_t;
 
 typedef struct weather_alert
 {
-  char    event[128];
-  int64_t start;
-  int64_t end;
-  char    tags[64];
+  char    event[128] = {};
+  int64_t start      = 0;
+  int64_t end        = 0;
+  char    tags[64]   = {};
 } weather_alert_t;
 
 typedef struct air_quality
@@ -136,25 +137,37 @@ typedef struct air_quality
   float   pm10[MAX_AQ_HOURS];
   float   nh3[MAX_AQ_HOURS];
   int64_t dt[MAX_AQ_HOURS];
+
+  air_quality()
+  {
+    std::fill(aqi,   aqi   + MAX_AQ_HOURS, INT32_MIN);
+    std::fill(co,    co    + MAX_AQ_HOURS, NAN);
+    std::fill(no,    no    + MAX_AQ_HOURS, NAN);
+    std::fill(no2,   no2   + MAX_AQ_HOURS, NAN);
+    std::fill(o3,    o3    + MAX_AQ_HOURS, NAN);
+    std::fill(so2,   so2   + MAX_AQ_HOURS, NAN);
+    std::fill(pm2_5, pm2_5 + MAX_AQ_HOURS, NAN);
+    std::fill(pm10,  pm10  + MAX_AQ_HOURS, NAN);
+    std::fill(nh3,   nh3   + MAX_AQ_HOURS, NAN);
+    std::fill(dt,    dt    + MAX_AQ_HOURS, (int64_t)0);
+  }
 } air_quality_t;
 
 typedef struct weather_data
 {
-  const char         *provider_name;
-  float               lat;
-  float               lon;
-  char                timezone[64];
-  int                 timezone_offset;
-  weather_current_t   current;
-  weather_hourly_t    hourly[MAX_HOURLY];
-  weather_daily_t     daily[MAX_DAILY];
-  weather_alert_t     alerts[MAX_ALERTS];
-  int                 num_alerts;
-  air_quality_t       air_quality;
-  int                 num_aq_hours;
+  const char         *provider_name   = nullptr;
+  float               lat             = NAN;
+  float               lon             = NAN;
+  char                timezone[64]    = {};
+  int                 timezone_offset = INT32_MIN;
+  weather_current_t   current         = {};
+  weather_hourly_t    hourly[MAX_HOURLY] = {};
+  weather_daily_t     daily[MAX_DAILY]   = {};
+  weather_alert_t     alerts[MAX_ALERTS] = {};
+  int                 num_alerts      = 0;
+  air_quality_t       air_quality     = {};
+  int                 num_aq_hours    = 0;
 } weather_data_t;
-
-void initWeatherData(weather_data_t &data);
 
 inline bool isSentinelFloat(float val)     { return std::isnan(val); }
 inline bool isSentinelInt(int val)         { return val == INT32_MIN; }

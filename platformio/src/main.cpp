@@ -308,7 +308,7 @@ void setup()
   client.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
 #endif
 
-  initWeatherData(weatherData);
+  static weather_data_t weatherData;
   int rxStatus = weatherProvider.fetchData(client, weatherData);
   if (rxStatus != HTTP_CODE_OK)
   {
