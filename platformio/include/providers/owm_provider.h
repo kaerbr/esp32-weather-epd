@@ -23,12 +23,8 @@
 class OpenWeatherMapProvider : public WeatherProvider
 {
 public:
-  const char* getName() const override;
-#ifdef USE_HTTP
-  int fetchData(WiFiClient &client, weather_data_t &data) override;
-#else
-  int fetchData(WiFiClientSecure &client, weather_data_t &data) override;
-#endif
+  explicit OpenWeatherMapProvider(WiFiClient &client);
+  int fetchData(weather_data_t &data) override;
 };
 
 #endif

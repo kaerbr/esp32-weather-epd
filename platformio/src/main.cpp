@@ -35,9 +35,7 @@
 #include "renderer.h"
 #include "weather_data.h"
 #include "weather_provider.h"
-#if defined(WEATHER_PROVIDER_OWM)
-  #include "providers/owm_provider.h"
-#endif
+#include "weather_provider_factory.h"
 
 #if defined(SENSOR_BME280)
   #include <Adafruit_BME280.h>
@@ -45,7 +43,7 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
-#if defined(USE_HTTPS_WITH_CERT_VERIF) || defined(USE_HTTPS_WITH_CERT_VERIF)
+#ifndef USE_HTTP
   #include <WiFiClientSecure.h>
 #endif
 #ifdef USE_HTTPS_WITH_CERT_VERIF
@@ -54,11 +52,13 @@
 
 // too large to allocate locally on stack
 static weather_data_t weatherData;
-#if defined(WEATHER_PROVIDER_OWM)
-  static OpenWeatherMapProvider weatherProvider;
+
+#ifdef USE_HTTP
+  static WiFiClient wifiClient;
 #else
-  #error No weather provider selected. Define WEATHER_PROVIDER_OWM in config.h.
+  static WiFiClientSecure wifiClient;
 #endif
+static WeatherProvider *weatherProvider = nullptr;
 
 Preferences prefs;
 
@@ -298,22 +298,23 @@ void setup()
   }
 
   // MAKE API REQUESTS
-#ifdef USE_HTTP
-  WiFiClient client;
-#elif defined(USE_HTTPS_NO_CERT_VERIF)
-  WiFiClientSecure client;
-  client.setInsecure();
+#if defined(USE_HTTPS_NO_CERT_VERIF)
+  wifiClient.setInsecure();
 #elif defined(USE_HTTPS_WITH_CERT_VERIF)
-  WiFiClientSecure client;
-  client.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
+  wifiClient.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
 #endif
 
+  if (!weatherProvider)
+  {
+    weatherProvider = WeatherProviderFactory::createProvider(wifiClient);
+  }
+
   static weather_data_t weatherData;
-  int rxStatus = weatherProvider.fetchData(client, weatherData);
+  int rxStatus = weatherProvider->fetchData(weatherData);
   if (rxStatus != HTTP_CODE_OK)
   {
     killWiFi();
-    statusStr = String(weatherProvider.getName()) + " API";
+    statusStr = weatherProvider->providerName + " API";
     tmpStr = String(rxStatus, DEC) + ": " + getHttpResponsePhrase(rxStatus);
     initDisplay();
     do
@@ -391,7 +392,7 @@ void setup()
     drawAlerts(weatherData.alerts, weatherData.num_alerts, CITY_STRING, dateStr);
 #endif
     drawStatusBar(statusStr, refreshTimeStr, wifiRSSI, batteryVoltage,
-                  weatherProvider.getName());
+                  weatherProvider->providerName.c_str());
   } while (display.nextPage());
   powerOffDisplay();
 
