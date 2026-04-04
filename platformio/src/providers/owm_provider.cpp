@@ -33,62 +33,87 @@ static wmo_code_t owmIdToWmo(int owmId)
   switch (owmId)
   {
   // Group 2xx: Thunderstorm
-  case 200: case 201: case 202:
-  case 210: case 211: case 212: case 221:
-  case 230: case 231: case 232:
-    return WMO_THUNDERSTORM;
+  case 200: case 201: case 210: case 211: case 221: case 230: case 231:
+    return WMO_THUNDERSTORM_SLIGHT_OR_MODERATE;
+  case 202: case 212: case 232:
+    // OWM doesn't specify hail, but this is the best approximation for severe thunderstorms
+    return WMO_THUNDERSTORM_HAIL_SLIGHT;
 
   // Group 3xx: Drizzle
-  case 300: case 301: case 302:
-  case 310: case 311: case 312:
-  case 313: case 314: case 321:
-    return WMO_DRIZZLE;
+  case 300: case 310:
+    return WMO_DRIZZLE_LIGHT;
+  case 301: case 311: case 313: case 321:
+    return WMO_DRIZZLE_MODERATE;
+  case 302: case 312: case 314:
+    return WMO_DRIZZLE_DENSE;
 
   // Group 5xx: Rain
-  case 500: case 501: case 502: case 503: case 504:
-    return WMO_RAIN;
+  case 500:
+    return WMO_RAIN_SLIGHT;
+  case 501:
+    return WMO_RAIN_MODERATE;
+  case 502: case 503: case 504:
+    return WMO_RAIN_HEAVY;
   case 511:
-    return WMO_FREEZING_RAIN;
-  case 520: case 521: case 522: case 531:
-    return WMO_RAIN;
+    return WMO_RAIN_FREEZING_LIGHT;
+  case 520:
+    return WMO_SHOWERS_RAIN_SLIGHT;
+  case 521: case 531:
+    return WMO_SHOWERS_RAIN_MODERATE;
+  case 522:
+    return WMO_SHOWERS_RAIN_VIOLENT;
 
   // Group 6xx: Snow
-  case 600: case 601: case 602:
-    return WMO_SNOW;
-  case 611: case 612: case 613:
-    return WMO_SLEET;
-  case 615: case 616: case 620: case 621: case 622:
-    return WMO_RAIN_SNOW;
+  case 600: case 615: // light snow, light rain and snow
+    return WMO_SNOW_SLIGHT;
+  case 601: case 616: // snow, rain and snow
+    return WMO_SNOW_MODERATE;
+  case 602: // heavy snow
+    return WMO_SNOW_HEAVY;
+  case 611: case 612: case 613: // sleet variants
+    return WMO_SNOW_GRAINS;
+  case 620: // light shower snow
+    return WMO_SHOWERS_SNOW_SLIGHT;
+  case 621: case 622: // shower snow, heavy shower snow
+    return WMO_SHOWERS_SNOW_HEAVY;
 
   // Group 7xx: Atmosphere
-  case 701: return WMO_MIST;
-  case 711: return WMO_SMOKE;
-  case 721: return WMO_HAZE;
-  case 731: return WMO_DUST;
-  case 741: return WMO_FOG;
-  case 751: return WMO_DUST;
-  case 761: return WMO_DUST;
-  case 762: return WMO_VOLCANIC_ASH;
-  case 771: return WMO_SQUALL;
-  case 781: return WMO_TORNADO;
+  case 701: // Mist
+  case 741: // Fog
+    return WMO_FOG;
+  case 711: // Smoke
+  case 721: // Haze
+  case 731: // Dust
+  case 751: // Sand
+  case 761: // Dust
+  case 762: // Ash
+  case 771: // Squall
+  case 781: // Tornado
+    return WMO_UNKNOWN; // The simplified Open-Meteo standard doesn't have exact codes for these.
 
   // Group 800: Clear
-  case 800: return WMO_CLEAR;
+  case 800:
+    return WMO_CLEAR_SKY;
 
   // Group 80x: Clouds
-  case 801: return WMO_CLOUDY_FEW;
-  case 802: return WMO_CLOUDY_SCATTERED;
-  case 803: return WMO_CLOUDY_BROKEN;
-  case 804: return WMO_OVERCAST;
+  case 801: // 11-25%
+    return WMO_MAINLY_CLEAR;
+  case 802: // 25-50%
+    return WMO_PARTLY_CLOUDY;
+  case 803: // 51-84%
+  case 804: // 85-100%
+    return WMO_OVERCAST;
 
   default:
-    // fallback by group
-    if (owmId >= 200 && owmId < 300) return WMO_THUNDERSTORM;
-    if (owmId >= 300 && owmId < 400) return WMO_DRIZZLE;
-    if (owmId >= 500 && owmId < 600) return WMO_RAIN;
-    if (owmId >= 600 && owmId < 700) return WMO_SNOW;
-    if (owmId >= 700 && owmId < 800) return WMO_FOG;
-    if (owmId >= 800 && owmId < 900) return WMO_OVERCAST;
+    // Fallback by group range
+    if (owmId >= 200 && owmId < 300) return WMO_THUNDERSTORM_SLIGHT_OR_MODERATE;
+    if (owmId >= 300 && owmId < 400) return WMO_DRIZZLE_MODERATE;
+    if (owmId >= 500 && owmId < 600) return WMO_RAIN_MODERATE;
+    if (owmId >= 600 && owmId < 700) return WMO_SNOW_MODERATE;
+    if (owmId == 701 || owmId == 741) return WMO_FOG;
+    if (owmId > 700 && owmId < 800) return WMO_UNKNOWN; 
+    if (owmId > 800 && owmId < 900) return WMO_OVERCAST;
+
     return WMO_UNKNOWN;
   }
 }
