@@ -432,7 +432,10 @@ const uint8_t *getWiFiBitmap16(int rssi)
   }
 } // end getWiFiBitmap24
 
-/* isDaytime() moved to wmo_codes.cpp */
+bool isDaytime(int64_t dt, int64_t sunrise, int64_t sunset)
+{
+  return dt >= sunrise && dt < sunset;
+}
 
 /* Returns true if the moon is currently in the sky above, false otherwise.
  */
@@ -486,76 +489,18 @@ const uint8_t *getConditionsBitmap(wmo_code_t code, bool day, bool moon,
 {
   switch (code)
   {
-  case WMO_THUNDERSTORM:
-    if (!cloudy && day)          {return getBitmap(wi_day_thunderstorm, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_thunderstorm, BitmapSize);}
-    return getBitmap(wi_thunderstorm, BitmapSize);
-  case WMO_THUNDERSTORM_HAIL:
-    if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
-    return getBitmap(wi_storm_showers, BitmapSize);
-  case WMO_DRIZZLE:
-    if (!cloudy && day)          {return getBitmap(wi_day_showers, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_showers, BitmapSize);}
-    return getBitmap(wi_showers, BitmapSize);
-  case WMO_FREEZING_DRIZZLE:
-  case WMO_FREEZING_RAIN:
-  case WMO_RAIN_SNOW:
-    if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
-    return getBitmap(wi_rain_mix, BitmapSize);
-  case WMO_RAIN:
-    if (!cloudy && day && windy)          {return getBitmap(wi_day_rain_wind, BitmapSize);}
-    if (!cloudy && day)                   {return getBitmap(wi_day_rain, BitmapSize);}
-    if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_rain_wind, BitmapSize);}
-    if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_rain, BitmapSize);}
-    if (windy)                            {return getBitmap(wi_rain_wind, BitmapSize);}
-    return getBitmap(wi_rain, BitmapSize);
-  case WMO_SNOW:
-    if (!cloudy && day && windy)          {return getBitmap(wi_day_snow_wind, BitmapSize);}
-    if (!cloudy && day)                   {return getBitmap(wi_day_snow, BitmapSize);}
-    if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_snow_wind, BitmapSize);}
-    if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_snow, BitmapSize);}
-    if (windy)                            {return getBitmap(wi_snow_wind, BitmapSize);}
-    return getBitmap(wi_snow, BitmapSize);
-  case WMO_SLEET:
-    if (!cloudy && day)          {return getBitmap(wi_day_sleet, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_sleet, BitmapSize);}
-    return getBitmap(wi_sleet, BitmapSize);
-  case WMO_HAIL:
-    return getBitmap(wi_hail, BitmapSize);
-  case WMO_MIST:
-  case WMO_FOG:
-    if (!cloudy && day)          {return getBitmap(wi_day_fog, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_fog, BitmapSize);}
-    return getBitmap(wi_fog, BitmapSize);
-  case WMO_SMOKE:
-    return getBitmap(wi_smoke, BitmapSize);
-  case WMO_HAZE:
-    if (day && !cloudy) {return getBitmap(wi_day_haze, BitmapSize);}
-    return getBitmap(wi_dust, BitmapSize);
-  case WMO_DUST:
-    return getBitmap(wi_sandstorm, BitmapSize);
-  case WMO_VOLCANIC_ASH:
-    return getBitmap(wi_volcano, BitmapSize);
-  case WMO_SQUALL:
-    return getBitmap(wi_cloudy_gusts, BitmapSize);
-  case WMO_TORNADO:
-    return getBitmap(wi_tornado, BitmapSize);
-  case WMO_LIGHTNING:
-    return getBitmap(wi_lightning, BitmapSize);
-  case WMO_CLEAR:
+  // Clear / Clouds
+  case WMO_CLEAR_SKY:
     if (windy)         {return getBitmap(wi_strong_wind, BitmapSize);}
     if (!day && moon)  {return getBitmap(wi_night_clear, BitmapSize);}
     if (!day && !moon) {return getBitmap(wi_stars, BitmapSize);}
     return getBitmap(wi_day_sunny, BitmapSize);
-  case WMO_CLOUDY_FEW:
+  case WMO_MAINLY_CLEAR:
     if (windy)         {return getBitmap(wi_strong_wind, BitmapSize);}
     if (!day && moon)  {return getBitmap(wi_night_alt_partly_cloudy, BitmapSize);}
     if (!day && !moon) {return getBitmap(wi_stars, BitmapSize);}
     return getBitmap(wi_day_sunny_overcast, BitmapSize);
-  case WMO_CLOUDY_SCATTERED:
-  case WMO_CLOUDY_BROKEN:
+  case WMO_PARTLY_CLOUDY:
     if (windy && day)           {return getBitmap(wi_day_cloudy_gusts, BitmapSize);}
     if (windy && !day && moon)  {return getBitmap(wi_night_alt_cloudy_gusts, BitmapSize);}
     if (windy && !day && !moon) {return getBitmap(wi_cloudy_gusts, BitmapSize);}
@@ -565,6 +510,90 @@ const uint8_t *getConditionsBitmap(wmo_code_t code, bool day, bool moon,
   case WMO_OVERCAST:
     if (windy) {return getBitmap(wi_cloudy_gusts, BitmapSize);}
     return getBitmap(wi_cloudy, BitmapSize);
+
+  // Fog
+  case WMO_FOG:
+  case WMO_FOG_DEPOSITING_RIME:
+    if (!cloudy && day)          {return getBitmap(wi_day_fog, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_fog, BitmapSize);}
+    return getBitmap(wi_fog, BitmapSize);
+
+  // Drizzle
+  case WMO_DRIZZLE_LIGHT:
+  case WMO_DRIZZLE_MODERATE:
+  case WMO_DRIZZLE_DENSE:
+    if (!cloudy && day)          {return getBitmap(wi_day_sprinkle, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_sprinkle, BitmapSize);}
+    return getBitmap(wi_sprinkle, BitmapSize);
+
+  // Freezing drizzle / freezing rain
+  case WMO_DRIZZLE_FREEZING_LIGHT:
+  case WMO_DRIZZLE_FREEZING_DENSE:
+  case WMO_RAIN_FREEZING_LIGHT:
+  case WMO_RAIN_FREEZING_HEAVY:
+    if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
+    return getBitmap(wi_rain_mix, BitmapSize);
+
+  // Rain
+  case WMO_RAIN_SLIGHT:
+  case WMO_RAIN_MODERATE:
+  case WMO_RAIN_HEAVY:
+    if (!cloudy && day && windy)          {return getBitmap(wi_day_rain_wind, BitmapSize);}
+    if (!cloudy && day)                   {return getBitmap(wi_day_rain, BitmapSize);}
+    if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_rain_wind, BitmapSize);}
+    if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_rain, BitmapSize);}
+    if (windy)                            {return getBitmap(wi_rain_wind, BitmapSize);}
+    return getBitmap(wi_rain, BitmapSize);
+
+  // Rain showers
+  case WMO_SHOWERS_RAIN_SLIGHT:
+  case WMO_SHOWERS_RAIN_MODERATE:
+    if (!cloudy && day)          {return getBitmap(wi_day_showers, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_showers, BitmapSize);}
+    return getBitmap(wi_showers, BitmapSize);
+  case WMO_SHOWERS_RAIN_VIOLENT:
+    if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
+    return getBitmap(wi_storm_showers, BitmapSize);
+
+  // Snow
+  case WMO_SNOW_SLIGHT:
+  case WMO_SNOW_MODERATE:
+  case WMO_SNOW_HEAVY:
+    if (!cloudy && day && windy)          {return getBitmap(wi_day_snow_wind, BitmapSize);}
+    if (!cloudy && day)                   {return getBitmap(wi_day_snow, BitmapSize);}
+    if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_snow_wind, BitmapSize);}
+    if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_snow, BitmapSize);}
+    if (windy)                            {return getBitmap(wi_snow_wind, BitmapSize);}
+    return getBitmap(wi_snow, BitmapSize);
+  case WMO_SNOW_GRAINS:
+    if (!cloudy && day)          {return getBitmap(wi_day_sleet, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_sleet, BitmapSize);}
+    return getBitmap(wi_sleet, BitmapSize);
+
+  // Snow showers
+  case WMO_SHOWERS_SNOW_SLIGHT:
+  case WMO_SHOWERS_SNOW_HEAVY:
+    if (!cloudy && day && windy)          {return getBitmap(wi_day_snow_wind, BitmapSize);}
+    if (!cloudy && day)                   {return getBitmap(wi_day_snow, BitmapSize);}
+    if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_snow_wind, BitmapSize);}
+    if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_snow, BitmapSize);}
+    if (windy)                            {return getBitmap(wi_snow_wind, BitmapSize);}
+    return getBitmap(wi_snow, BitmapSize);
+
+  // Thunderstorms
+  case WMO_THUNDERSTORM_SLIGHT_OR_MODERATE:
+    if (!cloudy && day)          {return getBitmap(wi_day_thunderstorm, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_thunderstorm, BitmapSize);}
+    return getBitmap(wi_thunderstorm, BitmapSize);
+  case WMO_THUNDERSTORM_HAIL_SLIGHT:
+  case WMO_THUNDERSTORM_HAIL_HEAVY:
+    if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
+    return getBitmap(wi_storm_showers, BitmapSize);
+
+  case WMO_UNKNOWN:
   default:
     return getBitmap(wi_na, BitmapSize);
   }
