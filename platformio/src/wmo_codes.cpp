@@ -1,5 +1,5 @@
-/* Client side utility declarations for esp32-weather-epd.
- * Copyright (C) 2022-2023  Luke Marzen
+/* WMO 4677 weather condition code utilities for esp32-weather-epd.
+ * Copyright (C) 2022-2026  Luke Marzen
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,15 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __CLIENT_UTILS_H__
-#define __CLIENT_UTILS_H__
+#include "wmo_codes.h"
 
-#include <Arduino.h>
-#include "config.h"
-
-wl_status_t startWiFi(int &wifiRSSI);
-void killWiFi();
-bool waitForSNTPSync(tm *timeInfo);
-bool printLocalTime(tm *timeInfo);
-
-#endif
+bool isDaytime(int64_t dt, int64_t sunrise, int64_t sunset)
+{
+  return dt >= sunrise && dt < sunset;
+}

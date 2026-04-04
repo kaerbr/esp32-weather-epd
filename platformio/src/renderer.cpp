@@ -15,10 +15,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <vector>
 #include "_locale.h"
 #include "_strftime.h"
 #include "renderer.h"
-#include "api_response.h"
 #include "config.h"
 #include "conversions.h"
 #include "display_utils.h"
@@ -266,7 +266,7 @@ void powerOffDisplay()
 
 // drawCurrentSunrise
 #ifdef POS_SUNRISE
-void drawCurrentSunrise(const owm_current_t &current)
+void drawCurrentSunrise(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = POS_SUNRISE % 2;
@@ -281,11 +281,18 @@ void drawCurrentSunrise(const owm_current_t &current)
 
   // sunrise
   display.setFont(&FONT_12pt8b);
-  char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
-  time_t ts = current.sunrise;
-  tm *timeInfo = localtime(&ts);
-  _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
-  drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, timeBuffer, LEFT);
+  if (isSentinelTimestamp(current.sunrise))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+  }
+  else
+  {
+    char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
+    time_t ts = current.sunrise;
+    tm *timeInfo = localtime(&ts);
+    _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, timeBuffer, LEFT);
+  }
 
   return;
 }
@@ -294,7 +301,7 @@ void drawCurrentSunrise(const owm_current_t &current)
 
 // drawCurrentWind
 #ifdef POS_WIND
-void drawCurrentWind(const owm_current_t &current)
+void drawCurrentWind(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_WIND % 2);
@@ -310,6 +317,11 @@ void drawCurrentWind(const owm_current_t &current)
 
   // wind
   display.setFont(&FONT_12pt8b);
+  if (isSentinelFloat(current.wind_speed))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+    return;
+  }
 #ifdef WIND_INDICATOR_ARROW
   display.drawInvertedBitmap(48 + (162 * PosX), 204 + 24 / 2 + (48 + 8) * PosY,
                              getWindBitmap24(current.wind_deg),
@@ -376,7 +388,7 @@ void drawCurrentWind(const owm_current_t &current)
 
 // drawCurrentUVI
 #ifdef POS_UVI
-void drawCurrentUVI(const owm_current_t &current)
+void drawCurrentUVI(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_UVI % 2);
@@ -395,6 +407,11 @@ void drawCurrentUVI(const owm_current_t &current)
 
   // uv index
   display.setFont(&FONT_12pt8b);
+  if (isSentinelFloat(current.uvi))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+    return;
+  }
   unsigned int uvi = static_cast<unsigned int>(
                                 std::max(std::round(current.uvi), 0.0f));
   dataStr = String(uvi);
@@ -430,7 +447,7 @@ void drawCurrentUVI(const owm_current_t &current)
 
 // drawCurrentAirQuality
 #ifdef POS_AIR_QULITY
-void drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_pollution)
+void drawCurrentAirQuality(const air_quality_t &air_quality)
 {
   String dataStr, unitStr;
   int PosX = (POS_AIR_QULITY % 2);
@@ -459,10 +476,15 @@ void drawCurrentAirQuality(const owm_resp_air_pollution_t &owm_air_pollution)
 
   // air quality index
   display.setFont(&FONT_12pt8b);
-  const owm_components_t &c = owm_air_pollution.components;
-  // OpenWeatherMap does not provide pb (lead) conentrations, so we pass NULL.
-  int aqi = calc_aqi(AQI_SCALE, c.co, c.nh3, c.no, c.no2, c.o3, NULL, c.so2,
-                                c.pm10, c.pm2_5);
+  if (isSentinelFloat(air_quality.co[0]))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+    return;
+  }
+  // OpenWeatherMap does not provide pb (lead) concentrations, so we pass NULL.
+  int aqi = calc_aqi(AQI_SCALE, air_quality.co, air_quality.nh3,
+                     air_quality.no, air_quality.no2, air_quality.o3, NULL,
+                     air_quality.so2, air_quality.pm10, air_quality.pm2_5);
   int aqi_max = aqi_scale_max(AQI_SCALE);
   if (aqi > aqi_max)
   {
@@ -549,7 +571,7 @@ void drawCurrentInTemp(float inTemp)
 
 // drawCurrentSunset
 #ifdef POS_SUNSET
-void drawCurrentSunset(const owm_current_t &current)
+void drawCurrentSunset(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_SUNSET % 2);
@@ -564,11 +586,18 @@ void drawCurrentSunset(const owm_current_t &current)
 
   // sunset
   display.setFont(&FONT_12pt8b);
-  char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
-  time_t ts = current.sunset;
-  tm *timeInfo = localtime(&ts);
-  _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
-  drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, timeBuffer, LEFT);
+  if (isSentinelTimestamp(current.sunset))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+  }
+  else
+  {
+    char timeBuffer[12] = {}; // big enough to accommodate "hh:mm:ss am"
+    time_t ts = current.sunset;
+    tm *timeInfo = localtime(&ts);
+    _strftime(timeBuffer, sizeof(timeBuffer), TIME_FORMAT, timeInfo);
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, timeBuffer, LEFT);
+  }
 
   return;
 }
@@ -577,7 +606,7 @@ void drawCurrentSunset(const owm_current_t &current)
 
 // drawCurrentHumidity
 #ifdef POS_HUMIDITY
-void drawCurrentHumidity(const owm_current_t &current)
+void drawCurrentHumidity(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_HUMIDITY % 2);
@@ -593,11 +622,18 @@ void drawCurrentHumidity(const owm_current_t &current)
 
   // humidity
   display.setFont(&FONT_12pt8b);
-  dataStr = String(current.humidity);
-  drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, dataStr, LEFT);
-  display.setFont(&FONT_8pt8b);
-  drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2,
-             "%", LEFT);
+  if (isSentinelInt(current.humidity))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+  }
+  else
+  {
+    dataStr = String(current.humidity);
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, dataStr, LEFT);
+    display.setFont(&FONT_8pt8b);
+    drawString(display.getCursorX(), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2,
+               "%", LEFT);
+  }
   return;
 }
 #endif
@@ -605,7 +641,7 @@ void drawCurrentHumidity(const owm_current_t &current)
 
 // drawCurrentPressure
 #ifdef POS_PRESSURE
-void drawCurrentPressure(const owm_current_t &current)
+void drawCurrentPressure(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_PRESSURE % 2);
@@ -619,6 +655,12 @@ void drawCurrentPressure(const owm_current_t &current)
   drawString(48 + (162 * PosX), 204 + 10 + (48 + 8) * PosY, TXT_PRESSURE, LEFT);
 
   // pressure
+  if (isSentinelInt(current.pressure))
+  {
+    display.setFont(&FONT_12pt8b);
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+    return;
+  }
 #ifdef UNITS_PRES_HECTOPASCALS
   dataStr = String(current.pressure);
   unitStr = String(" ") + TXT_UNITS_PRES_HECTOPASCALS;
@@ -675,7 +717,7 @@ void drawCurrentPressure(const owm_current_t &current)
 
 // drawCurrentVisibility
 #ifdef POS_VISIBILITY
-void drawCurrentVisibility(const owm_current_t &current)
+void drawCurrentVisibility(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_VISIBILITY % 2);
@@ -691,6 +733,11 @@ void drawCurrentVisibility(const owm_current_t &current)
 
   // visibility
   display.setFont(&FONT_12pt8b);
+  if (isSentinelInt(current.visibility))
+  {
+    drawString(48 + (162 * PosX), 204 + 17 / 2 + (48 + 8) * PosY + 48 / 2, "--", LEFT);
+    return;
+  }
 #ifdef UNITS_DIST_KILOMETERS
   float vis = meters_to_kilometers(current.visibility);
   unitStr = String(" ") + TXT_UNITS_DIST_KILOMETERS;
@@ -766,7 +813,7 @@ void drawCurrentInHumidity(float inHumidity)
 
 // drawCurrentMoonrise
 #ifdef POS_MOONRISE
-void drawCurrentMoonrise(const owm_daily_t &today)
+void drawCurrentMoonrise(const weather_daily_t &today)
 {
   String dataStr, unitStr;
   int PosX = POS_MOONRISE % 2;
@@ -795,7 +842,7 @@ void drawCurrentMoonrise(const owm_daily_t &today)
 
 // drawCurrentMoonset
 #ifdef POS_MOONSET
-void drawCurrentMoonset(const owm_daily_t &today)
+void drawCurrentMoonset(const weather_daily_t &today)
 {
   String dataStr, unitStr;
   int PosX = (POS_MOONSET % 2);
@@ -823,7 +870,7 @@ void drawCurrentMoonset(const owm_daily_t &today)
 
 // drawCurrentMoonphase
 #ifdef POS_MOONPHASE
-void drawCurrentMoonphase(const owm_daily_t &daily)
+void drawCurrentMoonphase(const weather_daily_t &daily)
 {
   String dataStr, unitStr;
   int PosX = (POS_MOONPHASE % 2);
@@ -870,7 +917,7 @@ void drawCurrentMoonphase(const owm_daily_t &daily)
 
 // drawCurrentDewpoint
 #ifdef POS_DEWPOINT
-void drawCurrentDewpoint(const owm_current_t &current)
+void drawCurrentDewpoint(const weather_current_t &current)
 {
   String dataStr, unitStr;
   int PosX = (POS_DEWPOINT % 2);
@@ -888,7 +935,7 @@ void drawCurrentDewpoint(const owm_current_t &current)
 
   // Dew point
   display.setFont(&FONT_12pt8b);
-  if (!std::isnan(current.dew_point))
+  if (!isSentinelFloat(current.dew_point))
   {
 #ifdef UNITS_TEMP_KELVIN
   dataStr = String(std::round(current.dew_point * 10) / 10.0f, 1);
@@ -919,9 +966,9 @@ void drawCurrentDewpoint(const owm_current_t &current)
 /* This function is responsible for drawing the current conditions and
  * associated icons.
  */
-void drawCurrentConditions(const owm_current_t &current,
-                           const owm_daily_t &today,
-                           const owm_resp_air_pollution_t &owm_air_pollution,
+void drawCurrentConditions(const weather_current_t &current,
+                           const weather_daily_t &today,
+                           const air_quality_t &air_quality,
                            float inTemp, float inHumidity)
 {
   String dataStr, unitStr;
@@ -1013,7 +1060,7 @@ void drawCurrentConditions(const owm_current_t &current,
     # endif
 
     # ifdef POS_AIR_QULITY
-      drawCurrentAirQuality(owm_air_pollution);
+      drawCurrentAirQuality(air_quality);
     # endif
 
     # ifdef POS_INTEMP
@@ -1047,7 +1094,7 @@ void drawCurrentConditions(const owm_current_t &current,
 
 /* This function is responsible for drawing the five day forecast.
  */
-void drawForecast(const owm_daily_t *daily, tm timeInfo)
+void drawForecast(const weather_daily_t *daily, tm timeInfo)
 {
   // 5 day, forecast
   String hiStr, loStr;
@@ -1072,27 +1119,35 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 
     // high | low
     display.setFont(&FONT_8pt8b);
-    drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
+    if (isSentinelFloat(daily[i].temp.max) || isSentinelFloat(daily[i].temp.min))
+    {
+      hiStr = "--";
+      loStr = "--";
+    }
+    else
+    {
 #ifdef UNITS_TEMP_KELVIN
-    hiStr = String(static_cast<int>(std::round(daily[i].temp.max)));
-    loStr = String(static_cast<int>(std::round(daily[i].temp.min)));
+      hiStr = String(static_cast<int>(std::round(daily[i].temp.max)));
+      loStr = String(static_cast<int>(std::round(daily[i].temp.min)));
 #endif
 #ifdef UNITS_TEMP_CELSIUS
-    hiStr = String(static_cast<int>(
-                std::round(kelvin_to_celsius(daily[i].temp.max)))) +
-            "\260";
-    loStr = String(static_cast<int>(
-                std::round(kelvin_to_celsius(daily[i].temp.min)))) +
-            "\260";
+      hiStr = String(static_cast<int>(
+                  std::round(kelvin_to_celsius(daily[i].temp.max)))) +
+              "\260";
+      loStr = String(static_cast<int>(
+                  std::round(kelvin_to_celsius(daily[i].temp.min)))) +
+              "\260";
 #endif
 #ifdef UNITS_TEMP_FAHRENHEIT
-    hiStr = String(static_cast<int>(
-                std::round(kelvin_to_fahrenheit(daily[i].temp.max)))) +
-            "\260";
-    loStr = String(static_cast<int>(
-                std::round(kelvin_to_fahrenheit(daily[i].temp.min)))) +
-            "\260";
+      hiStr = String(static_cast<int>(
+                  std::round(kelvin_to_fahrenheit(daily[i].temp.max)))) +
+              "\260";
+      loStr = String(static_cast<int>(
+                  std::round(kelvin_to_fahrenheit(daily[i].temp.min)))) +
+              "\260";
 #endif
+    }
+    drawString(x + 31, 98 + 69 / 2 + 38 - 6 + 12, "|", CENTER);
 #ifdef TEMP_ORDER_HL
     drawString(x + 31 - 4, 98 + 69 / 2 + 38 - 6 + 12, hiStr, RIGHT);
     drawString(x + 31 + 5, 98 + 69 / 2 + 38 - 6 + 12, loStr, LEFT);
@@ -1104,6 +1159,9 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 
 // daily forecast precipitation
 #if DISPLAY_DAILY_PRECIP
+    if (!isSentinelFloat(daily[i].pop) && !isSentinelFloat(daily[i].rain)
+        && !isSentinelFloat(daily[i].snow))
+    {
     float dailyPrecip;
 #if defined(UNITS_DAILY_PRECIP_POP)
     dailyPrecip = daily[i].pop * 100;
@@ -1140,6 +1198,7 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 #if (DISPLAY_DAILY_PRECIP == 2) // smart
       }
 #endif
+    } // end sentinel check for precipitation
 #endif // DISPLAY_DAILY_PRECIP
     }
 
@@ -1149,19 +1208,19 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
   /* This function is responsible for drawing the current alerts if any.
    * Up to 2 alerts can be drawn.
    */
-  void drawAlerts(std::vector<owm_alerts_t> & alerts,
+  void drawAlerts(weather_alert_t *alerts, int num_alerts,
                   const String &city, const String &date)
   {
 #if DEBUG_LEVEL >= 1
-  Serial.println("[debug] alerts.size()    : " + String(alerts.size()));
+  Serial.println("[debug] num_alerts       : " + String(num_alerts));
 #endif
-  if (alerts.size() == 0)
+  if (num_alerts == 0)
   { // no alerts to draw
     return;
   }
 
-  int *ignore_list = (int *) calloc(alerts.size(), sizeof(*ignore_list));
-  int *alert_indices = (int *) calloc(alerts.size(), sizeof(*alert_indices));
+  int *ignore_list = (int *) calloc(num_alerts, sizeof(*ignore_list));
+  int *alert_indices = (int *) calloc(num_alerts, sizeof(*alert_indices));
   if (!ignore_list || !alert_indices)
   {
     Serial.println("Error: Failed to allocate memory while handling alerts.");
@@ -1172,7 +1231,7 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 
   // Converts all event text and tags to lowercase, removes extra information,
   // and filters out redundant alerts of lesser urgency.
-  filterAlerts(alerts, ignore_list);
+  filterAlerts(alerts, num_alerts, ignore_list);
 
   // limit alert text width so that is does not run into the location or date
   // strings
@@ -1187,7 +1246,7 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
 #if DEBUG_LEVEL >= 1
   Serial.print("[debug] ignore_list      : [ ");
 #endif
-  for (int i = 0; i < alerts.size(); ++i)
+  for (int i = 0; i < num_alerts; ++i)
   {
 #if DEBUG_LEVEL >= 1
     Serial.print(String(ignore_list[i]) + " ");
@@ -1207,28 +1266,29 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
     // adjust max width to for 48x48 icons
     max_w -= 48;
 
-    owm_alerts_t &cur_alert = alerts[alert_indices[0]];
+    weather_alert_t &cur_alert = alerts[alert_indices[0]];
     display.drawInvertedBitmap(196, 8, getAlertBitmap48(cur_alert), 48, 48,
                                ACCENT_COLOR);
     // must be called after getAlertBitmap
-    toTitleCase(cur_alert.event);
+    String eventStr(cur_alert.event);
+    toTitleCase(eventStr);
 
     display.setFont(&FONT_14pt8b);
-    if (getStringWidth(cur_alert.event) <= max_w)
+    if (getStringWidth(eventStr) <= max_w)
     { // Fits on a single line, draw along bottom
-      drawString(196 + 48 + 4, 24 + 8 - 12 + 20 + 1, cur_alert.event, LEFT);
+      drawString(196 + 48 + 4, 24 + 8 - 12 + 20 + 1, eventStr, LEFT);
     }
     else
     { // use smaller font
       display.setFont(&FONT_12pt8b);
-      if (getStringWidth(cur_alert.event) <= max_w)
+      if (getStringWidth(eventStr) <= max_w)
       { // Fits on a single line with smaller font, draw along bottom
-        drawString(196 + 48 + 4, 24 + 8 - 12 + 17 + 1, cur_alert.event, LEFT);
+        drawString(196 + 48 + 4, 24 + 8 - 12 + 17 + 1, eventStr, LEFT);
       }
       else
       { // Does not fit on a single line, draw higher to allow room for 2nd line
         drawMultiLnString(196 + 48 + 4, 24 + 8 - 12 + 17 - 11,
-                          cur_alert.event, LEFT, max_w, 2, 23);
+                          eventStr, LEFT, max_w, 2, 23);
       }
     }
   } // end 1 alert
@@ -1240,15 +1300,16 @@ void drawForecast(const owm_daily_t *daily, tm timeInfo)
     display.setFont(&FONT_12pt8b);
     for (int i = 0; i < 2; ++i)
     {
-      owm_alerts_t &cur_alert = alerts[alert_indices[i]];
+      weather_alert_t &cur_alert = alerts[alert_indices[i]];
 
       display.drawInvertedBitmap(196, (i * 32), getAlertBitmap32(cur_alert),
                                  32, 32, ACCENT_COLOR);
       // must be called after getAlertBitmap
-      toTitleCase(cur_alert.event);
+      String eventStr(cur_alert.event);
+      toTitleCase(eventStr);
 
       drawMultiLnString(196 + 32 + 3, 5 + 17 + (i * 32),
-                        cur_alert.event, LEFT, max_w, 1, 0);
+                        eventStr, LEFT, max_w, 1, 0);
     } // end for-loop
   } // end 2 alerts
 
@@ -1304,9 +1365,15 @@ int kelvin_to_plot_y(float kelvin, int tempBoundMin, float yPxPerUnit,
 /* This function is responsible for drawing the outlook graph for the specified
  * number of hours(up to 48).
  */
-void drawOutlookGraph(const owm_hourly_t *hourly, const owm_daily_t *daily,
+void drawOutlookGraph(const weather_hourly_t *hourly, const weather_daily_t *daily,
                       tm timeInfo)
 {
+  // skip entire graph if hourly data is unavailable
+  if (isSentinelFloat(hourly[0].temp))
+  {
+    return;
+  }
+
   const int xPos0 = 350;
   int xPos1 = DISP_WIDTH;
   const int yPos0 = 216;
@@ -1648,7 +1715,8 @@ void drawOutlookGraph(const owm_hourly_t *hourly, const owm_daily_t *daily,
  * the display.
  */
 void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
-                   int rssi, uint32_t batVoltage)
+                   int rssi, uint32_t batVoltage,
+                   const char *providerName)
 {
   String dataStr;
   uint16_t dataColor = GxEPD_BLACK;
@@ -1721,6 +1789,15 @@ void drawStatusBar(const String &statusStr, const String &refreshTimeStr,
     pos -= getStringWidth(statusStr) + 24;
     display.drawInvertedBitmap(pos, DISP_HEIGHT - 1 - 18, error_icon_24x24,
                                24, 24, dataColor);
+    pos -= sp;
+  }
+
+  // provider name (leftmost item in the right-aligned group)
+  if (providerName && providerName[0] != '\0')
+  {
+    dataColor = GxEPD_BLACK;
+    display.setFont(&FONT_6pt8b);
+    drawString(pos, DISP_HEIGHT - 1 - 2, providerName, RIGHT, dataColor);
   }
 
   return;

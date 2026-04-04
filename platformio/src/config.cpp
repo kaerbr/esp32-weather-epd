@@ -56,6 +56,7 @@ const unsigned long WIFI_TIMEOUT = 10000; // ms, WiFi connection timeout.
 //   -258 Deserialization Incomplete Input
 const unsigned HTTP_CLIENT_TCP_TIMEOUT = 10000; // ms
 
+#ifdef WEATHER_PROVIDER_OWM
 // OPENWEATHERMAP API
 // OpenWeatherMap API key, https://openweathermap.org/
 const String OWM_APIKEY   = "abcdefghijklmnopqrstuvwxyz012345";
@@ -75,6 +76,7 @@ const String OWM_ENDPOINT = "api.openweathermap.org";
 //   day (no more than)" to 1,000. This ensures you will never overrun the free
 //   calls.
 const String OWM_ONECALL_VERSION = "3.0";
+#endif
 
 // LOCATION
 // Set your latitude and longitude.

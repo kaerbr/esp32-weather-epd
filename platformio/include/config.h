@@ -307,6 +307,10 @@
 //   If you wish to disable battery monitoring set this macro to 0.
 #define BATTERY_MONITORING 1
 
+// WEATHER PROVIDER
+// Uncomment exactly one weather provider.
+#define WEATHER_PROVIDER_OWM
+
 // NON-VOLATILE STORAGE (NVS) NAMESPACE
 #define NVS_NAMESPACE "weather_epd"
 
@@ -335,9 +339,11 @@ extern const char *WIFI_SSID;
 extern const char *WIFI_PASSWORD;
 extern const unsigned long WIFI_TIMEOUT;
 extern const unsigned HTTP_CLIENT_TCP_TIMEOUT;
+#ifdef WEATHER_PROVIDER_OWM
 extern const String OWM_APIKEY;
 extern const String OWM_ENDPOINT;
 extern const String OWM_ONECALL_VERSION;
+#endif
 extern const String LAT;
 extern const String LON;
 extern const String CITY_STRING;
@@ -363,6 +369,9 @@ extern const uint32_t MAX_BATTERY_VOLTAGE;
 extern const uint32_t MIN_BATTERY_VOLTAGE;
 
 // CONFIG VALIDATION - DO NOT MODIFY
+#if !(defined(WEATHER_PROVIDER_OWM))
+  #error Invalid configuration. Exactly one weather provider must be selected.
+#endif
 #if !(  defined(DISP_BW_V2)  \
       ^ defined(DISP_3C_B)   \
       ^ defined(DISP_7C_F)   \
