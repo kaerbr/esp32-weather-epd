@@ -29,7 +29,7 @@
 #include "_strftime.h"
 #include "config.h"
 #include "display_utils.h"
-#include "wmo_codes.h"
+#include "model/wmo_codes.h"
 
 // icon header files
 #include "icons/icons.h"

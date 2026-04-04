@@ -1,28 +1,10 @@
-/* Universal weather data structure definitions for esp32-weather-epd.
- * Copyright (C) 2022-2026  Luke Marzen
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
-#ifndef __WEATHER_DATA_H__
-#define __WEATHER_DATA_H__
+#pragma once
 
 #include <algorithm>
 #include <cstdint>
 #include <cmath>
 #include <climits>
-#include "wmo_codes.h"
+#include "model/wmo_codes.h"
 
 constexpr int MAX_HOURLY   = 48;
 constexpr int MAX_DAILY    = 8;
@@ -172,5 +154,3 @@ typedef struct weather_data
 inline bool isSentinelFloat(float val)     { return std::isnan(val); }
 inline bool isSentinelInt(int val)         { return val == INT32_MIN; }
 inline bool isSentinelTimestamp(int64_t val){ return val == 0; }
-
-#endif

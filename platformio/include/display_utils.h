@@ -20,7 +20,7 @@
 
 #include <time.h>
 #include <WiFi.h>
-#include "weather_data.h"
+#include "model/weather_data.h"
 
 enum alert_category {
   NOT_FOUND = -1,

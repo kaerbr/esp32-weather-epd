@@ -22,10 +22,10 @@
 #include <WiFi.h>
 
 #include "_locale.h"
-#include "providers/owm_provider.h"
+#include "provider/owm_provider.h"
 #include "config.h"
 #include "display_utils.h"
-#include "wmo_codes.h"
+#include "model/wmo_codes.h"
 
 
 static wmo_code_t owmIdToWmo(int owmId)

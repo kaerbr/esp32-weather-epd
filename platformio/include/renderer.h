@@ -20,7 +20,7 @@
 
 #include <Arduino.h>
 #include <time.h>
-#include "weather_data.h"
+#include "model/weather_data.h"
 #include "config.h"
 
 #ifdef DISP_BW_V2

@@ -31,9 +31,9 @@
 #include "display_utils.h"
 #include "icons/icons_196x196.h"
 #include "renderer.h"
-#include "weather_data.h"
-#include "weather_provider.h"
-#include "weather_provider_factory.h"
+#include "model/weather_data.h"
+#include "provider/weather_provider.h"
+#include "provider/weather_provider_factory.h"
 
 #if defined(SENSOR_BME280)
   #include <Adafruit_BME280.h>
@@ -41,8 +41,10 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
-#ifdef USE_HTTPS_WITH_CERT_VERIF
+#ifndef USE_HTTP
   #include <WiFiClientSecure.h>
+#endif
+#ifdef USE_HTTPS_WITH_CERT_VERIF
   #include "cert.h"
 #endif
 
