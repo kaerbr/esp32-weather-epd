@@ -1,30 +1,16 @@
-/* Factory for creating weather provider instances.
- * Copyright (C) 2022-2026  Luke Marzen
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 #include "provider/weather_provider_factory.h"
 #include "config.h"
 
 #include "provider/owm_provider.h"
+#include "provider/openmeteo_provider.h"
 
 WeatherProvider* WeatherProviderFactory::createProvider(WiFiClient &client)
 {
 #if defined(WEATHER_PROVIDER_OWM)
   return new OpenWeatherMapProvider(client);
+#elif defined(WEATHER_PROVIDER_OPENMETEO)
+  return new OpenMeteoProvider(client);
 #else
-  #error No weather provider selected. Define WEATHER_PROVIDER_OWM in config.h.
+  #error No weather provider selected. Define a WEATHER_PROVIDER_* macro in config.h.
 #endif
 }

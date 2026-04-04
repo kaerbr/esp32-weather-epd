@@ -23,7 +23,8 @@
 
 // --- WEATHER API PROVIDER ---
 // Uncomment exactly one of the following providers to use.
-#define USE_PROVIDER_OPENWEATHERMAP
+// #define USE_PROVIDER_OPENWEATHERMAP
+#define USE_PROVIDER_OPENMETEO
 
 // E-PAPER PANEL
 // This project supports the following E-Paper panels:
@@ -313,7 +314,8 @@
 
 // WEATHER PROVIDER
 // Uncomment exactly one weather provider.
-#define WEATHER_PROVIDER_OWM
+// #define WEATHER_PROVIDER_OWM
+#define WEATHER_PROVIDER_OPENMETEO
 
 // NON-VOLATILE STORAGE (NVS) NAMESPACE
 #define NVS_NAMESPACE "weather_epd"
@@ -369,7 +371,8 @@ extern const uint32_t MAX_BATTERY_VOLTAGE;
 extern const uint32_t MIN_BATTERY_VOLTAGE;
 
 // CONFIG VALIDATION - DO NOT MODIFY
-#if !(defined(WEATHER_PROVIDER_OWM))
+#if !(  defined(WEATHER_PROVIDER_OWM) \
+      ^ defined(WEATHER_PROVIDER_OPENMETEO))
   #error Invalid configuration. Exactly one weather provider must be selected.
 #endif
 #if !(  defined(DISP_BW_V2)  \

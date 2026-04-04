@@ -19,9 +19,9 @@
 
 **Purpose**: Add Open-Meteo provider selection macros and configuration variables.
 
-- [ ] T001 [P] Add Open-Meteo provider macros (`USE_PROVIDER_OPENMETEO`, `WEATHER_PROVIDER_OPENMETEO` commented out) and `#ifdef WEATHER_PROVIDER_OPENMETEO` extern block for optional API key in `include/config.h`
-- [ ] T002 [P] Add Open-Meteo configuration variables (API key, empty by default) in `src/config.cpp`
-- [ ] T003 [P] Update config validation `#if` block at bottom of `include/config.h` to include `WEATHER_PROVIDER_OPENMETEO` in the XOR check
+- [X] T001 [P] Add Open-Meteo provider macros (`USE_PROVIDER_OPENMETEO`, `WEATHER_PROVIDER_OPENMETEO` commented out) and `#ifdef WEATHER_PROVIDER_OPENMETEO` extern block for optional API key in `include/config.h`
+- [X] T002 [P] Add Open-Meteo configuration variables (API key, empty by default) in `src/config.cpp`
+- [X] T003 [P] Update config validation `#if` block at bottom of `include/config.h` to include `WEATHER_PROVIDER_OPENMETEO` in the XOR check
 
 **Checkpoint**: Config compiles with OWM still selected. Open-Meteo macros exist but are commented out.
 
@@ -33,11 +33,11 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete.
 
-- [ ] T004 Create `include/provider/openmeteo_provider.h` declaring `OpenMeteoProvider` class inheriting from `WeatherProvider` with `fetchData()` override, guarded by `#ifdef USE_PROVIDER_OPENMETEO`
-- [ ] T005 Create `src/provider/openmeteo_provider.cpp` with license header, `#ifdef USE_PROVIDER_OPENMETEO` guard, includes, constructor setting `providerName = "Open-Meteo"`, and stub `fetchData()` returning `HTTP_CODE_OK`
-- [ ] T006 Add static WMO code → English description lookup function in `src/provider/openmeteo_provider.cpp` (28 entries per data-model.md WMO Description Lookup Table)
-- [ ] T007 Wire Open-Meteo into factory: add `#include "provider/openmeteo_provider.h"` and `#elif defined(WEATHER_PROVIDER_OPENMETEO)` branch in `src/provider/weather_provider_factory.cpp`
-- [ ] T008 Add ISRG Root X1 (Let's Encrypt) root CA certificate for `api.open-meteo.com` and `air-quality-api.open-meteo.com` to `include/cert.h`
+- [X] T004 Create `include/provider/openmeteo_provider.h` declaring `OpenMeteoProvider` class inheriting from `WeatherProvider` with `fetchData()` override, guarded by `#ifdef USE_PROVIDER_OPENMETEO`
+- [X] T005 Create `src/provider/openmeteo_provider.cpp` with license header, `#ifdef USE_PROVIDER_OPENMETEO` guard, includes, constructor setting `providerName = "Open-Meteo"`, and stub `fetchData()` returning `HTTP_CODE_OK`
+- [X] T006 Add static WMO code → English description lookup function in `src/provider/openmeteo_provider.cpp` (28 entries per data-model.md WMO Description Lookup Table)
+- [X] T007 Wire Open-Meteo into factory: add `#include "provider/openmeteo_provider.h"` and `#elif defined(WEATHER_PROVIDER_OPENMETEO)` branch in `src/provider/weather_provider_factory.cpp`
+- [X] T008 Add ISRG Root X1 (Let's Encrypt) root CA certificate for `api.open-meteo.com` and `air-quality-api.open-meteo.com` to `include/cert.h`
 
 **Checkpoint**: Switching to `WEATHER_PROVIDER_OPENMETEO` in config.h compiles and runs the stub. Display shows "Open-Meteo" in status bar with no weather data.
 
@@ -51,12 +51,12 @@
 
 ### Implementation for User Story 1+2
 
-- [ ] T009 [US1] Implement URL construction in `src/provider/openmeteo_provider.cpp`: build forecast API query string with all current/hourly/daily variables from `contracts/openmeteo_api_contract.md`, using `LAT`/`LON` from config, `timezone=auto`, `wind_speed_unit=ms`, `timeformat=unixtime`, `forecast_days=8`, `forecast_hours=48`. Free endpoint by default; commercial endpoint with `apikey` param when configured.
-- [ ] T010 [US1] Implement `deserializeForecast()` static function in `src/provider/openmeteo_provider.cpp`: parse metadata (latitude, longitude, timezone, utc_offset_seconds) from JSON response into `weather_data_t` top-level fields. Use ArduinoJson filter document to minimize memory.
-- [ ] T011 [US1] Implement current conditions parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: map all current variables per `data-model.md` Current Conditions table. Apply conversions: Celsius→Kelvin (+273.15f), snowfall cm→mm (×10), cloud_cover→condition.clouds. Populate condition via WMO lookup. Copy `daily.sunrise[0]` and `daily.sunset[0]` into `current.sunrise` and `current.sunset`.
-- [ ] T012 [US1] Implement hourly forecast parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: iterate up to `MAX_HOURLY` (48) entries, map all hourly variables per `data-model.md` Hourly Forecast table. Apply conversions: Celsius→Kelvin, snowfall cm→mm, PoP ÷100.0f.
-- [ ] T013 [US1] Implement daily forecast parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: iterate up to `MAX_DAILY` (8) entries, map all daily variables per `data-model.md` Daily Forecast table including extended variables (mean_relative_humidity_2m, mean_dewpoint_2m, mean_sea_level_pressure, mean_visibility). Apply conversions: Celsius→Kelvin, snowfall cm→mm, PoP ÷100.0f. Leave moonrise/moonset/moon_phase and temp.morn/day/eve/night and feels_like.morn/day/eve/night at sentinel values.
-- [ ] T014 [US1] Implement `fetchData()` body in `src/provider/openmeteo_provider.cpp`: set `data.provider_name`, construct forecast URI, execute HTTP GET with retry loop (max 3 attempts), check WiFi status (return `-512 - wifi_status` if disconnected), call `deserializeForecast()` on success (return `-256 - json_error` on parse failure), propagate HTTP error codes on failure. Call `wifi_client.stop()` and `http.end()` after each attempt.
+- [X] T009 [US1] Implement URL construction in `src/provider/openmeteo_provider.cpp`: build forecast API query string with all current/hourly/daily variables from `contracts/openmeteo_api_contract.md`, using `LAT`/`LON` from config, `timezone=auto`, `wind_speed_unit=ms`, `timeformat=unixtime`, `forecast_days=8`, `forecast_hours=48`. Free endpoint by default; commercial endpoint with `apikey` param when configured.
+- [X] T010 [US1] Implement `deserializeForecast()` static function in `src/provider/openmeteo_provider.cpp`: parse metadata (latitude, longitude, timezone, utc_offset_seconds) from JSON response into `weather_data_t` top-level fields. Use ArduinoJson filter document to minimize memory.
+- [X] T011 [US1] Implement current conditions parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: map all current variables per `data-model.md` Current Conditions table. Apply conversions: Celsius→Kelvin (+273.15f), snowfall cm→mm (×10), cloud_cover→condition.clouds. Populate condition via WMO lookup. Copy `daily.sunrise[0]` and `daily.sunset[0]` into `current.sunrise` and `current.sunset`.
+- [X] T012 [US1] Implement hourly forecast parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: iterate up to `MAX_HOURLY` (48) entries, map all hourly variables per `data-model.md` Hourly Forecast table. Apply conversions: Celsius→Kelvin, snowfall cm→mm, PoP ÷100.0f.
+- [X] T013 [US1] Implement daily forecast parsing in `deserializeForecast()` in `src/provider/openmeteo_provider.cpp`: iterate up to `MAX_DAILY` (8) entries, map all daily variables per `data-model.md` Daily Forecast table including extended variables (mean_relative_humidity_2m, mean_dewpoint_2m, mean_sea_level_pressure, mean_visibility). Apply conversions: Celsius→Kelvin, snowfall cm→mm, PoP ÷100.0f. Leave moonrise/moonset/moon_phase and temp.morn/day/eve/night and feels_like.morn/day/eve/night at sentinel values.
+- [X] T014 [US1] Implement `fetchData()` body in `src/provider/openmeteo_provider.cpp`: set `data.provider_name`, construct forecast URI, execute HTTP GET with retry loop (max 3 attempts), check WiFi status (return `-512 - wifi_status` if disconnected), call `deserializeForecast()` on success (return `-256 - json_error` on parse failure), propagate HTTP error codes on failure. Call `wifi_client.stop()` and `http.end()` after each attempt.
 
 **Checkpoint**: Device fetches weather data from Open-Meteo without API key. All current condition widgets, hourly graph, and daily forecast cards display correctly. Status bar shows "Open-Meteo".
 
@@ -70,8 +70,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T015 [US3] Review `src/provider/openmeteo_provider.cpp` against every row in `data-model.md` tables (Current, Hourly, Daily) and verify each mapping is implemented. Add any missing field assignments. Ensure all unit conversions match the Conversion column.
-- [ ] T016 [US3] Verify ArduinoJson filter document in `src/provider/openmeteo_provider.cpp` includes all requested API variables (cross-reference with `contracts/openmeteo_api_contract.md` query parameters). Ensure no variables are filtered out accidentally.
+- [X] T015 [US3] Review `src/provider/openmeteo_provider.cpp` against every row in `data-model.md` tables (Current, Hourly, Daily) and verify each mapping is implemented. Add any missing field assignments. Ensure all unit conversions match the Conversion column.
+- [X] T016 [US3] Verify ArduinoJson filter document in `src/provider/openmeteo_provider.cpp` includes all requested API variables (cross-reference with `contracts/openmeteo_api_contract.md` query parameters). Ensure no variables are filtered out accidentally.
 
 **Checkpoint**: Every field listed as "Direct" or with a conversion in data-model.md is populated. Only fields marked "NOT AVAILABLE" remain at sentinel values.
 
@@ -85,8 +85,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T017 [US4] Review error handling paths in `fetchData()` in `src/provider/openmeteo_provider.cpp`: verify WiFi status check returns `-512 - wifi_status`, JSON parse errors return `-256 - json_error`, HTTP errors propagate status code, retry loop bounded at 3 attempts, `wifi_client.stop()` and `http.end()` called in all paths.
-- [ ] T018 [US4] Add serial debug logging in `src/provider/openmeteo_provider.cpp` matching OWM pattern: log sanitized URL before request (without API key), log HTTP response code after each attempt, log JSON overflow status at `DEBUG_LEVEL >= 1`, print full response at `DEBUG_LEVEL >= 2`.
+- [X] T017 [US4] Review error handling paths in `fetchData()` in `src/provider/openmeteo_provider.cpp`: verify WiFi status check returns `-512 - wifi_status`, JSON parse errors return `-256 - json_error`, HTTP errors propagate status code, retry loop bounded at 3 attempts, `wifi_client.stop()` and `http.end()` called in all paths.
+- [X] T018 [US4] Add serial debug logging in `src/provider/openmeteo_provider.cpp` matching OWM pattern: log sanitized URL before request (without API key), log HTTP response code after each attempt, log JSON overflow status at `DEBUG_LEVEL >= 1`, print full response at `DEBUG_LEVEL >= 2`.
 
 **Checkpoint**: Error conditions produce correct negative status codes. Serial output shows diagnostic information at configured debug levels.
 
@@ -100,8 +100,8 @@
 
 ### Implementation for User Story 5
 
-- [ ] T019 [US5] Implement `deserializeAirQuality()` static function in `src/provider/openmeteo_provider.cpp`: parse hourly arrays for carbon_monoxide→co, nitrogen_monoxide→no, nitrogen_dioxide→no2, ozone→o3, sulphur_dioxide→so2, pm2_5→pm2_5, pm10→pm10, ammonia→nh3 per `data-model.md` Air Quality table. Iterate up to `MAX_AQ_HOURS` (24). Populate `dt[]` timestamps. Increment `data.num_aq_hours`.
-- [ ] T020 [US5] Add air quality API call to `fetchData()` in `src/provider/openmeteo_provider.cpp` after the weather forecast call: construct AQ URI per `contracts/openmeteo_api_contract.md` (past_hours=24, forecast_hours=0), execute HTTP GET with retry loop (max 3 attempts), call `deserializeAirQuality()` on success. If AQ call fails but weather succeeded, return the weather HTTP status (success) — AQ failure is non-fatal.
+- [X] T019 [US5] Implement `deserializeAirQuality()` static function in `src/provider/openmeteo_provider.cpp`: parse hourly arrays for carbon_monoxide→co, nitrogen_monoxide→no, nitrogen_dioxide→no2, ozone→o3, sulphur_dioxide→so2, pm2_5→pm2_5, pm10→pm10, ammonia→nh3 per `data-model.md` Air Quality table. Iterate up to `MAX_AQ_HOURS` (24). Populate `dt[]` timestamps. Increment `data.num_aq_hours`.
+- [X] T020 [US5] Add air quality API call to `fetchData()` in `src/provider/openmeteo_provider.cpp` after the weather forecast call: construct AQ URI per `contracts/openmeteo_api_contract.md` (past_hours=24, forecast_hours=0), execute HTTP GET with retry loop (max 3 attempts), call `deserializeAirQuality()` on success. If AQ call fails but weather succeeded, return the weather HTTP status (success) — AQ failure is non-fatal.
 
 **Checkpoint**: Air quality widget shows AQI value and description. Pollutant data populates correctly. Weather still displays if AQ API fails.
 
@@ -111,10 +111,10 @@
 
 **Purpose**: Final verification across all user stories.
 
-- [ ] T021 Verify full compilation with `-Wall` produces no new warnings when `WEATHER_PROVIDER_OPENMETEO` is enabled in `include/config.h`
-- [ ] T022 Verify compilation still works when switching back to `WEATHER_PROVIDER_OWM` in `include/config.h` (no regressions)
-- [ ] T023 Review `include/config.h` default template: ensure new Open-Meteo options have sensible defaults and clear comments matching the existing documentation style
-- [ ] T024 Verify `data-model.md` "NOT AVAILABLE" fields (moonrise, moonset, moon_phase, temp morn/day/eve/night, feels_like morn/day/eve/night, daily clouds, alerts) remain at sentinel values after fetch
+- [X] T021 Verify full compilation with `-Wall` produces no new warnings when `WEATHER_PROVIDER_OPENMETEO` is enabled in `include/config.h`
+- [X] T022 Verify compilation still works when switching back to `WEATHER_PROVIDER_OWM` in `include/config.h` (no regressions)
+- [X] T023 Review `include/config.h` default template: ensure new Open-Meteo options have sensible defaults and clear comments matching the existing documentation style
+- [X] T024 Verify `data-model.md` "NOT AVAILABLE" fields (moonrise, moonset, moon_phase, temp morn/day/eve/night, feels_like morn/day/eve/night, daily clouds, alerts) remain at sentinel values after fetch
 
 ---
 
