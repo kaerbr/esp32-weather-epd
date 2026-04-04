@@ -15,6 +15,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include "config.h"
+#ifdef USE_PROVIDER_OPENWEATHERMAP
+
 #include <cstring>
 #include <Arduino.h>
 #include <ArduinoJson.h>
@@ -346,8 +349,7 @@ static int deserializeAirQuality(WiFiClient &json, weather_data_t &data)
   return 0;
 }
 
-OpenWeatherMapProvider::OpenWeatherMapProvider(WiFiClient &client)
-  : WeatherProvider(client)
+OpenWeatherMapProvider::OpenWeatherMapProvider(WiFiClient &client): WeatherProvider(client)
 {
   providerName = "OpenWeatherMap";
 }
@@ -359,15 +361,15 @@ int OpenWeatherMapProvider::fetchData(weather_data_t &data)
   // --- OneCall API ---
   int attempts = 0;
   bool rxSuccess = false;
-  String uri = "/data/" + OWM_ONECALL_VERSION
-               + "/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + OWM_LANG
+  String uri = "/data/3.0/onecall?lat=" + LAT + "&lon=" + LON + "&lang=" + API_LANG
                + "&units=standard&exclude=minutely";
 #if !DISPLAY_ALERTS
   uri += ",alerts";
 #endif
 
-  String sanitizedUri = OWM_ENDPOINT + uri + "&appid={API key}";
-  uri += "&appid=" + OWM_APIKEY;
+  String endpoint = "api.openweathermap.org";
+  String sanitizedUri = endpoint + uri + "&appid={API key}";
+  uri += "&appid=" + APIKEY;
 
   Serial.print(TXT_ATTEMPTING_HTTP_REQ);
   Serial.println(": " + sanitizedUri);
@@ -383,7 +385,7 @@ int OpenWeatherMapProvider::fetchData(weather_data_t &data)
     HTTPClient http;
     http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT);
     http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);
-    http.begin(wifi_client, OWM_ENDPOINT, PORT, uri);
+    http.begin(wifi_client, endpoint, PORT, uri);
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
@@ -422,8 +424,8 @@ int OpenWeatherMapProvider::fetchData(weather_data_t &data)
   sprintf(startStr, "%lld", start);
   uri = "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON
         + "&start=" + startStr + "&end=" + endStr
-        + "&appid=" + OWM_APIKEY;
-  sanitizedUri = OWM_ENDPOINT +
+        + "&appid=" + APIKEY;
+  sanitizedUri = endpoint +
                "/data/2.5/air_pollution/history?lat=" + LAT + "&lon=" + LON
                + "&start=" + startStr + "&end=" + endStr
                + "&appid={API key}";
@@ -442,7 +444,7 @@ int OpenWeatherMapProvider::fetchData(weather_data_t &data)
     HTTPClient http;
     http.setConnectTimeout(HTTP_CLIENT_TCP_TIMEOUT);
     http.setTimeout(HTTP_CLIENT_TCP_TIMEOUT);
-    http.begin(wifi_client, OWM_ENDPOINT, PORT, uri);
+    http.begin(wifi_client, endpoint, PORT, uri);
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
@@ -465,3 +467,5 @@ int OpenWeatherMapProvider::fetchData(weather_data_t &data)
 
   return httpResponse;
 }
+
+#endif

@@ -4,6 +4,12 @@
 #include "config.h"
 #include <WiFiClient.h>
 
+/**
+ * @brief An abstract base class (interface) for weather data providers.
+ *
+ * Any class that provides weather data from a specific API (like OpenWeatherMap, DWD, Open-Meteo, etc.)
+ * must inherit from this class and implement its pure virtual functions.
+ */
 class WeatherProvider
 {
 public:

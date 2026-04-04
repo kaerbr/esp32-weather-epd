@@ -1,3 +1,6 @@
+#include "config.h"
+#ifdef USE_PROVIDER_OPENWEATHERMAP
+
 #pragma once
 
 #include "weather_provider.h"
@@ -8,3 +11,5 @@ public:
   explicit OpenWeatherMapProvider(WiFiClient &client);
   int fetchData(weather_data_t &data) override;
 };
+
+#endif
