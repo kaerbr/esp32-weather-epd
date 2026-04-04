@@ -43,22 +43,10 @@
 #if defined(SENSOR_BME680)
   #include <Adafruit_BME680.h>
 #endif
-#ifndef USE_HTTP
-  #include <WiFiClientSecure.h>
-#endif
 #ifdef USE_HTTPS_WITH_CERT_VERIF
+  #include <WiFiClientSecure.h>
   #include "cert.h"
 #endif
-
-// too large to allocate locally on stack
-static weather_data_t weatherData;
-
-#ifdef USE_HTTP
-  static WiFiClient wifiClient;
-#else
-  static WiFiClientSecure wifiClient;
-#endif
-static WeatherProvider *weatherProvider = nullptr;
 
 Preferences prefs;
 
@@ -297,19 +285,22 @@ void setup()
     return;
   }
 
-  // MAKE API REQUESTS
-#if defined(USE_HTTPS_NO_CERT_VERIF)
-  wifiClient.setInsecure();
+#ifdef USE_HTTP
+  WiFiClient client;
+#elif defined(USE_HTTPS_NO_CERT_VERIF)
+  WiFiClientSecure client;
+  client.setInsecure();
 #elif defined(USE_HTTPS_WITH_CERT_VERIF)
-  wifiClient.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
+  WiFiClientSecure client;
+  client.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
 #endif
 
-  if (!weatherProvider)
-  {
-    weatherProvider = WeatherProviderFactory::createProvider(wifiClient);
-  }
-
+  // INITIALIZE WEATHER PROVIDER
+  // too large to allocate locally on stack
   static weather_data_t weatherData;
+  static WeatherProvider *weatherProvider = WeatherProviderFactory::createProvider(client);
+
+  // MAKE API REQUESTS
   int rxStatus = weatherProvider->fetchData(weatherData);
   if (rxStatus != HTTP_CODE_OK)
   {
