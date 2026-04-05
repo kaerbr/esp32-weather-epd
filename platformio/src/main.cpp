@@ -256,7 +256,7 @@ void setup()
   wifiClient.setInsecure();
 #elif defined(USE_HTTPS_WITH_CERT_VERIF)
   WiFiClientSecure client;
-  client.setCACert(cert_Sectigo_Public_Server_Authentication_Root_R46);
+  client.setCACert(cert_intermediate);
 #endif
 
   // INITIALIZE WEATHER PROVIDER

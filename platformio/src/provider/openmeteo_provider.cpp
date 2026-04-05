@@ -65,7 +65,7 @@ static void populateCondition(weather_condition_t &cond, int weatherCode)
   cond.description[sizeof(cond.description) - 1] = '\0';
 }
 
-static int deserializeForecast(WiFiClient &json, weather_data_t &data)
+static int deserializeForecast(const String &json, weather_data_t &data)
 {
   // Filter document to minimize memory usage
   JsonDocument filter;
@@ -275,7 +275,7 @@ static int deserializeForecast(WiFiClient &json, weather_data_t &data)
   return 0;
 }
 
-static int deserializeAirQuality(WiFiClient &json, weather_data_t &data)
+static int deserializeAirQuality(const String &json, weather_data_t &data)
 {
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, json);
@@ -333,6 +333,9 @@ int OpenMeteoProvider::fetchData(weather_data_t &data)
   int attempts = 0;
   bool rxSuccess = false;
 
+  // "api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility,uv_index&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m,precipitation_probability,rain,snowfall,weather_code,cloud_cover,pressure_msl,visibility,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,uv_index_max,precipitation_sum,rain_sum,snowfall_sum,precipitation_hours,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,mean_relative_humidity_2m,mean_dewpoint_2m,mean_sea_level_pressure,mean_visibility&timezone=auto&wind_speed_unit=ms&timeformat=unixtime&forecast_days=8&forecast_hours=48";
+
+  String endpoint = "api.open-meteo.com";
   String uri = "/v1/forecast?latitude=" + LAT + "&longitude=" + LON
     + "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
       "dew_point_2m,precipitation,rain,showers,snowfall,weather_code,"
@@ -346,13 +349,10 @@ int OpenMeteoProvider::fetchData(weather_data_t &data)
       "apparent_temperature_max,apparent_temperature_min,sunrise,sunset,"
       "uv_index_max,precipitation_sum,rain_sum,snowfall_sum,"
       "precipitation_hours,precipitation_probability_max,"
-      "wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,"
-      "mean_relative_humidity_2m,mean_dewpoint_2m,mean_sea_level_pressure,"
-      "mean_visibility"
+      "wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant"
     + "&timezone=auto&wind_speed_unit=ms&timeformat=unixtime"
       "&forecast_days=8&forecast_hours=48";
 
-  String endpoint = "api.open-meteo.com";
   String sanitizedUri = endpoint + uri;
 
   Serial.print(TXT_ATTEMPTING_HTTP_REQ);
@@ -373,7 +373,8 @@ int OpenMeteoProvider::fetchData(weather_data_t &data)
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
-      int parseResult = deserializeForecast(http.getStream(), data);
+      String payload = http.getString();
+      int parseResult = deserializeForecast(payload, data);
       if (parseResult < 0)
       {
         httpResponse = parseResult;
@@ -425,7 +426,8 @@ int OpenMeteoProvider::fetchData(weather_data_t &data)
     httpResponse = http.GET();
     if (httpResponse == HTTP_CODE_OK)
     {
-      int parseResult = deserializeAirQuality(http.getStream(), data);
+      String payload = http.getString();
+      int parseResult = deserializeAirQuality(payload, data);
       if (parseResult < 0)
       {
         httpResponse = parseResult;

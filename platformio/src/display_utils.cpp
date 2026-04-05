@@ -1589,14 +1589,19 @@ static const unsigned char *moon_phase_icon_arr[] = {
 */
 const uint8_t *getMoonPhaseBitmap48(const weather_daily_t &daily)
 {
+  if (std::isnan(daily.moon_phase))
+    return moon_phase_icon_arr[0]; // default to new moon icon
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
-    return moon_phase_icon_arr[n];
+  if (n < 0 || n >= 29) n = 0;
+  return moon_phase_icon_arr[n];
 } // end getMoonPhaseBitmap48
 
 
 // Returns the current moon phase string
   const char *getMoonPhaseStr(const weather_daily_t &daily)
 {
+  if (std::isnan(daily.moon_phase))
+    return "--";
   int n = static_cast<int>(daily.moon_phase * 28 + 0.5);
   switch(n)
   {
