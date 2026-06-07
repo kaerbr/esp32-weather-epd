@@ -29,7 +29,7 @@
 #include "_strftime.h"
 #include "config.h"
 #include "display_utils.h"
-#include "model/wmo_codes.h"
+#include "model/wmo_code.h"
 
 // icon header files
 #include "icons/icons.h"
@@ -471,129 +471,187 @@ bool isWindy(float wind_speed, float wind_gust) {
       || wind_gust  >= 40.2 /*m/s*/);
 }
 
-/* Takes the current weather and today's daily weather forcast (from
- * OpenWeatherMap API response) and returns a pointer to the icon's 196x196
- * bitmap.
+/* Takes the current weather and today's daily weather forcast
+ * and returns a pointer to the icon's 196x196 bitmap.
  *
  * Uses multiple factors to return more detailed icons than the simple icon
- * catagories that OpenWeatherMap provides.
+ * catagories.
  *
- * Last Updated: June 26, 2022
- *
- * References:
- *   https://openweathermap.org/weather-conditions
+ * Last Updated: June 07, 2026
  */
 template <int BitmapSize>
-const uint8_t *getConditionsBitmap(wmo_code_t code, bool day, bool moon,
+const uint8_t *getConditionsBitmap(WmoCode code, bool day, bool moon,
                                    bool cloudy, bool windy)
 {
   switch (code)
   {
-  // Clear / Clouds
-  case WMO_CLEAR_SKY:
+  // 00-03: No Precipitation (Sky state)
+  case WmoCode::ClearSky:
     if (windy)         {return getBitmap(wi_strong_wind, BitmapSize);}
     if (!day && moon)  {return getBitmap(wi_night_clear, BitmapSize);}
     if (!day && !moon) {return getBitmap(wi_stars, BitmapSize);}
     return getBitmap(wi_day_sunny, BitmapSize);
-  case WMO_MAINLY_CLEAR:
+  case WmoCode::MainlyClear:
     if (windy)         {return getBitmap(wi_strong_wind, BitmapSize);}
     if (!day && moon)  {return getBitmap(wi_night_alt_partly_cloudy, BitmapSize);}
     if (!day && !moon) {return getBitmap(wi_stars, BitmapSize);}
     return getBitmap(wi_day_sunny_overcast, BitmapSize);
-  case WMO_PARTLY_CLOUDY:
+  case WmoCode::PartlyCloudy:
     if (windy && day)           {return getBitmap(wi_day_cloudy_gusts, BitmapSize);}
     if (windy && !day && moon)  {return getBitmap(wi_night_alt_cloudy_gusts, BitmapSize);}
     if (windy && !day && !moon) {return getBitmap(wi_cloudy_gusts, BitmapSize);}
     if (!day && moon)           {return getBitmap(wi_night_alt_cloudy, BitmapSize);}
     if (!day && !moon)          {return getBitmap(wi_cloud, BitmapSize);}
     return getBitmap(wi_day_cloudy, BitmapSize);
-  case WMO_OVERCAST:
+  case WmoCode::Overcast:
     if (windy) {return getBitmap(wi_cloudy_gusts, BitmapSize);}
     return getBitmap(wi_cloudy, BitmapSize);
 
-  // Fog
-  case WMO_FOG:
-  case WMO_FOG_DEPOSITING_RIME:
+  // 04-09: Reduced Visibility / Aerosols
+  case WmoCode::SmokeOrAsh:
+    return getBitmap(wi_smoke, BitmapSize);
+  case WmoCode::Haze:
+    if (day) return getBitmap(wi_day_haze, BitmapSize);
+    return getBitmap(wi_day_haze, BitmapSize); // No night haze icon
+  case WmoCode::WidespreadDustSuspension:
+  case WmoCode::DustOrSandRaisedByWind:
+  case WmoCode::DustWhirls:
+  case WmoCode::DistantDustStorm:
+    return getBitmap(wi_dust, BitmapSize);
+
+  // 10-12: Mist & Shallow Phenomena
+  case WmoCode::Mist:
+  case WmoCode::ShallowFog:
+    if (day)           {return getBitmap(wi_day_fog, BitmapSize);}
+    if (!day && moon)  {return getBitmap(wi_night_fog, BitmapSize);}
+    return getBitmap(wi_fog, BitmapSize);
+  case WmoCode::LightningVisibleNoThunder:
+    if (day)           {return getBitmap(wi_day_lightning, BitmapSize);}
+    if (!day && moon)  {return getBitmap(wi_night_alt_lightning, BitmapSize);}
+    return getBitmap(wi_lightning, BitmapSize);
+
+  // 13-19: Severe Convective Features
+  case WmoCode::SquallsDistant:
+  case WmoCode::SevereSquallsAtStation:
+    return getBitmap(wi_strong_wind, BitmapSize);
+  case WmoCode::ThunderstormNoPrecipitation:
+    if (day)           {return getBitmap(wi_day_thunderstorm, BitmapSize);}
+    if (!day && moon)  {return getBitmap(wi_night_alt_thunderstorm, BitmapSize);}
+    return getBitmap(wi_thunderstorm, BitmapSize);
+  case WmoCode::SevereTornadoOrFunnel:
+    return getBitmap(wi_tornado, BitmapSize);
+
+  // 30-39: Wind, Dust, or Snow Storms
+  case WmoCode::DuststormSlightToModerate:
+  case WmoCode::DuststormSevere:
+    return getBitmap(wi_sandstorm, BitmapSize);
+  case WmoCode::DriftingSnowLowLevel:
+  case WmoCode::BlowingSnowHighLevel:
+    return getBitmap(wi_snow_wind, BitmapSize);
+
+  // 40-49: Fog or Ice Fog
+  case WmoCode::FogDistant:
+  case WmoCode::Fog:
+  case WmoCode::FogDepositingRime:
     if (!cloudy && day)          {return getBitmap(wi_day_fog, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_fog, BitmapSize);}
     return getBitmap(wi_fog, BitmapSize);
 
-  // Drizzle
-  case WMO_DRIZZLE_LIGHT:
-  case WMO_DRIZZLE_MODERATE:
-  case WMO_DRIZZLE_DENSE:
+  // 50-59: Drizzle
+  case WmoCode::DrizzleLight:
+  case WmoCode::DrizzleModerate:
+  case WmoCode::DrizzleDense:
     if (!cloudy && day)          {return getBitmap(wi_day_sprinkle, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_sprinkle, BitmapSize);}
     return getBitmap(wi_sprinkle, BitmapSize);
-
-  // Freezing drizzle / freezing rain
-  case WMO_DRIZZLE_FREEZING_LIGHT:
-  case WMO_DRIZZLE_FREEZING_DENSE:
-  case WMO_RAIN_FREEZING_LIGHT:
-  case WMO_RAIN_FREEZING_HEAVY:
+  case WmoCode::DrizzleFreezingLight:
+  case WmoCode::DrizzleFreezingDense:
     if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
     return getBitmap(wi_rain_mix, BitmapSize);
 
-  // Rain
-  case WMO_RAIN_SLIGHT:
-  case WMO_RAIN_MODERATE:
-  case WMO_RAIN_HEAVY:
+  // 60-69: Rain
+  case WmoCode::RainSlight:
+  case WmoCode::RainModerate:
+  case WmoCode::RainHeavy:
     if (!cloudy && day && windy)          {return getBitmap(wi_day_rain_wind, BitmapSize);}
     if (!cloudy && day)                   {return getBitmap(wi_day_rain, BitmapSize);}
     if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_rain_wind, BitmapSize);}
     if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_rain, BitmapSize);}
     if (windy)                            {return getBitmap(wi_rain_wind, BitmapSize);}
     return getBitmap(wi_rain, BitmapSize);
+  case WmoCode::RainFreezingLight:
+  case WmoCode::RainFreezingHeavy:
+    if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
+    return getBitmap(wi_rain_mix, BitmapSize);
+  case WmoCode::RainSnowMixSlight:
+  case WmoCode::RainSnowMixHeavy:
+    if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
+    return getBitmap(wi_rain_mix, BitmapSize);
 
-  // Rain showers
-  case WMO_SHOWERS_RAIN_SLIGHT:
-  case WMO_SHOWERS_RAIN_MODERATE:
-    if (!cloudy && day)          {return getBitmap(wi_day_showers, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_showers, BitmapSize);}
-    return getBitmap(wi_showers, BitmapSize);
-  case WMO_SHOWERS_RAIN_VIOLENT:
-    if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
-    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
-    return getBitmap(wi_storm_showers, BitmapSize);
-
-  // Snow
-  case WMO_SNOW_SLIGHT:
-  case WMO_SNOW_MODERATE:
-  case WMO_SNOW_HEAVY:
+  // 70-79: Solid Precipitation (Snow & Ice crystals)
+  case WmoCode::SnowSlight:
+  case WmoCode::SnowModerate:
+  case WmoCode::SnowHeavy:
     if (!cloudy && day && windy)          {return getBitmap(wi_day_snow_wind, BitmapSize);}
     if (!cloudy && day)                   {return getBitmap(wi_day_snow, BitmapSize);}
     if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_snow_wind, BitmapSize);}
     if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_snow, BitmapSize);}
     if (windy)                            {return getBitmap(wi_snow_wind, BitmapSize);}
     return getBitmap(wi_snow, BitmapSize);
-  case WMO_SNOW_GRAINS:
+  case WmoCode::SnowGrains:
+  case WmoCode::IceCrystals:
     if (!cloudy && day)          {return getBitmap(wi_day_sleet, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_sleet, BitmapSize);}
     return getBitmap(wi_sleet, BitmapSize);
 
-  // Snow showers
-  case WMO_SHOWERS_SNOW_SLIGHT:
-  case WMO_SHOWERS_SNOW_HEAVY:
+  // 80-89: Showers (Convective Precipitation)
+  case WmoCode::ShowersRainSlight:
+  case WmoCode::ShowersRainModerate:
+    if (!cloudy && day)          {return getBitmap(wi_day_showers, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_showers, BitmapSize);}
+    return getBitmap(wi_showers, BitmapSize);
+  case WmoCode::ShowersRainViolent:
+    if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
+    return getBitmap(wi_storm_showers, BitmapSize);
+  case WmoCode::ShowersRainSnowMixSlight:
+  case WmoCode::ShowersRainSnowMixHeavy:
+    if (!cloudy && day)          {return getBitmap(wi_day_rain_mix, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_rain_mix, BitmapSize);}
+    return getBitmap(wi_rain_mix, BitmapSize);
+  case WmoCode::ShowersSnowSlight:
+  case WmoCode::ShowersSnowHeavy:
     if (!cloudy && day && windy)          {return getBitmap(wi_day_snow_wind, BitmapSize);}
     if (!cloudy && day)                   {return getBitmap(wi_day_snow, BitmapSize);}
     if (!cloudy && !day && moon && windy) {return getBitmap(wi_night_alt_snow_wind, BitmapSize);}
     if (!cloudy && !day && moon)          {return getBitmap(wi_night_alt_snow, BitmapSize);}
     if (windy)                            {return getBitmap(wi_snow_wind, BitmapSize);}
     return getBitmap(wi_snow, BitmapSize);
+  case WmoCode::ShowersIcePellets:
+  case WmoCode::ShowersHailNoThunder:
+    if (!cloudy && day)          {return getBitmap(wi_day_hail, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_hail, BitmapSize);}
+    return getBitmap(wi_hail, BitmapSize);
 
-  // Thunderstorms
-  case WMO_THUNDERSTORM_SLIGHT_OR_MODERATE:
+  // 90-99: Thunderstorms
+  case WmoCode::ThunderstormSlightOrModerate:
     if (!cloudy && day)          {return getBitmap(wi_day_thunderstorm, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_thunderstorm, BitmapSize);}
     return getBitmap(wi_thunderstorm, BitmapSize);
-  case WMO_THUNDERSTORM_HAIL_SLIGHT:
-  case WMO_THUNDERSTORM_HAIL_HEAVY:
+  case WmoCode::ThunderstormHailSlight:
+  case WmoCode::ThunderstormHailHeavy:
     if (!cloudy && day)          {return getBitmap(wi_day_storm_showers, BitmapSize);}
     if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_storm_showers, BitmapSize);}
     return getBitmap(wi_storm_showers, BitmapSize);
+  case WmoCode::ThunderstormHeavyNoHail:
+    if (!cloudy && day)          {return getBitmap(wi_day_snow_thunderstorm, BitmapSize);}
+    if (!cloudy && !day && moon) {return getBitmap(wi_night_alt_snow_thunderstorm, BitmapSize);}
+    return getBitmap(wi_thunderstorm, BitmapSize);
 
-  case WMO_UNKNOWN:
+  case WmoCode::Unknown:
   default:
     return getBitmap(wi_na, BitmapSize);
   }
@@ -607,7 +665,7 @@ const uint8_t *getConditionsBitmap(wmo_code_t code, bool day, bool moon,
 const uint8_t *getHourlyForecastBitmap32(const weather_hourly_t &hourly,
                                          const weather_daily_t  &today)
 {
-  const wmo_code_t code = hourly.condition.wmo_code;
+  const WmoCode code = hourly.condition.wmo_code;
   const bool day = isDaytime(hourly.dt, today.sunrise, today.sunset);
   const bool moon = isMoonInSky(hourly.dt, today.moonrise, today.moonset,
                                 today.moon_phase);
@@ -621,7 +679,7 @@ const uint8_t *getHourlyForecastBitmap32(const weather_hourly_t &hourly,
  */
 const uint8_t *getDailyForecastBitmap64(const weather_daily_t &daily)
 {
-  const wmo_code_t code = daily.condition.wmo_code;
+  const WmoCode code = daily.condition.wmo_code;
   // always show daytime icon for daily forecast
   const bool day = true;
   const bool moon = false;
@@ -639,7 +697,7 @@ const uint8_t *getDailyForecastBitmap64(const weather_daily_t &daily)
 const uint8_t *getCurrentConditionsBitmap196(const weather_current_t &current,
                                              const weather_daily_t   &today)
 {
-  const wmo_code_t code = current.condition.wmo_code;
+  const WmoCode code = current.condition.wmo_code;
   const bool day = isDaytime(current.dt, current.sunrise, current.sunset);
   const bool moon = isMoonInSky(current.dt, today.moonrise, today.moonset,
                                 today.moon_phase);

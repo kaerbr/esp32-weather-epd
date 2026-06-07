@@ -11,7 +11,7 @@
 #include "provider/openmeteo_provider.h"
 #include "config.h"
 #include "display_utils.h"
-#include "model/wmo_codes.h"
+#include "model/wmo_code.h"
 
 // WMO weather code to English description lookup
 static const char *wmoDescription(int code)
@@ -54,11 +54,11 @@ static void populateCondition(weather_condition_t &cond, int weatherCode)
 {
   if (weatherCode <= 99)
   {
-    cond.wmo_code = static_cast<wmo_code_t>(weatherCode);
+    cond.wmo_code = static_cast<WmoCode>(weatherCode);
   }
   else
   {
-    cond.wmo_code = WMO_UNKNOWN;
+    cond.wmo_code = WmoCode::Unknown;
   }
   const char *desc = wmoDescription(weatherCode);
   strncpy(cond.description, desc, sizeof(cond.description) - 1);

@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cmath>
 #include <climits>
-#include "model/wmo_codes.h"
+#include "model/wmo_code.h"
 
 constexpr int MAX_HOURLY   = 48;
 constexpr int MAX_DAILY    = 8;
@@ -13,9 +13,9 @@ constexpr int MAX_AQ_HOURS = 24;
 
 typedef struct weather_condition
 {
-  wmo_code_t wmo_code   = WMO_UNKNOWN;
+  WmoCode wmo_code           = WmoCode::Unknown;
   char       description[64] = {};
-  int        clouds      = INT32_MIN;
+  int        clouds          = INT32_MIN;
 } weather_condition_t;
 
 typedef struct weather_current
