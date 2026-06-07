@@ -75,7 +75,7 @@ const char *LC_ERA_T_FMT   = "";
 // For full list of languages, see
 // https://openweathermap.org/api/one-call-api#multi
 // Note: "[only] The contents of the 'description' field will be translated."
-const String OWM_LANG = "fi";
+const String API_LANG = "fi";
 
 // CURRENT CONDITIONS
 const char *TXT_FEELS_LIKE         = "Tuntuu kuin";

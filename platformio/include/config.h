@@ -21,6 +21,11 @@
 #include <cstdint>
 #include <Arduino.h>
 
+// --- WEATHER API PROVIDER ---
+// Uncomment exactly one of the following providers to use.
+// #define USE_PROVIDER_OPENWEATHERMAP
+#define USE_PROVIDER_OPENMETEO
+
 // E-PAPER PANEL
 // This project supports the following E-Paper panels:
 //   DISP_BW_V2 - 7.5in e-Paper (v2)      800x480px  Black/White
@@ -307,6 +312,11 @@
 //   If you wish to disable battery monitoring set this macro to 0.
 #define BATTERY_MONITORING 1
 
+// WEATHER PROVIDER
+// Uncomment exactly one weather provider.
+// #define WEATHER_PROVIDER_OWM
+#define WEATHER_PROVIDER_OPENMETEO
+
 // NON-VOLATILE STORAGE (NVS) NAMESPACE
 #define NVS_NAMESPACE "weather_epd"
 
@@ -335,9 +345,7 @@ extern const char *WIFI_SSID;
 extern const char *WIFI_PASSWORD;
 extern const unsigned long WIFI_TIMEOUT;
 extern const unsigned HTTP_CLIENT_TCP_TIMEOUT;
-extern const String OWM_APIKEY;
-extern const String OWM_ENDPOINT;
-extern const String OWM_ONECALL_VERSION;
+extern const String APIKEY;
 extern const String LAT;
 extern const String LON;
 extern const String CITY_STRING;
@@ -363,6 +371,10 @@ extern const uint32_t MAX_BATTERY_VOLTAGE;
 extern const uint32_t MIN_BATTERY_VOLTAGE;
 
 // CONFIG VALIDATION - DO NOT MODIFY
+#if !(  defined(WEATHER_PROVIDER_OWM) \
+      ^ defined(WEATHER_PROVIDER_OPENMETEO))
+  #error Invalid configuration. Exactly one weather provider must be selected.
+#endif
 #if !(  defined(DISP_BW_V2)  \
       ^ defined(DISP_3C_B)   \
       ^ defined(DISP_7C_F)   \

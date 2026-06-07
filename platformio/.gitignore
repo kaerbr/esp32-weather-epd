@@ -1,2 +1,14 @@
 .pio
 .vscode
+.idea/
+*.o
+*.a
+*.so
+*.exe
+*.dll
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+.env*

@@ -218,4 +218,3 @@ DeserializationError deserializeAirQuality(WiFiClient &json,
 
 
 #endif
-

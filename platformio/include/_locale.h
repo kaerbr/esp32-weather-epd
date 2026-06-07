@@ -39,7 +39,7 @@ extern const char *LC_ERA_D_T_FMT;
 extern const char *LC_ERA_T_FMT;
 
 // OWM LANGUAGE
-extern const String OWM_LANG;
+extern const String API_LANG;
 
 // CURRENT CONDITIONS
 extern const char *TXT_FEELS_LIKE;
